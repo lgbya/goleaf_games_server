@@ -31,6 +31,7 @@ type User struct {
 
 type Agent struct {
 	ID 		int //id
+	HeartTime int64 //收到心跳包的时间
 }
 
 type Game struct {
@@ -115,6 +116,35 @@ func (u *User) ckUid2User(uid int) string {
 	return "key:uid|data:user=" + string(uid)
 }
 
+func (u *User) Common2LoginUid() map[int]*gate.Agent{
+	if data , found :=cache.New().Get(u.ckCommon2LoginUid()); found{
+		return data.(map[int]*gate.Agent)
+	}
+	return make(map[int]*gate.Agent)
+}
+
+func (u *User) Common3LoginUid(uid int, agent *gate.Agent){
+	uid2Agent := u.Common2LoginUid()
+	uid2Agent[uid] = agent
+	cache.New().SetNoExpiration(u.ckCommon2LoginUid(), uid2Agent)
+}
+
+func (u *User) Common4LoginUid(uid int)  {
+	uid2Agent := u.Common2LoginUid()
+	delete(uid2Agent, uid)
+	cache.New().SetNoExpiration(u.ckCommon2LoginUid(), uid2Agent)
+}
+
+func (u *User) ckCommon2LoginUid() string {
+	return "common|data:uid_list"
+}
+
+func (u *User) CheckRepeatLogin(uid int) bool {
+	uid2Agent := u.Common2LoginUid()
+	_, ok := uid2Agent[uid]
+	return ok
+}
+
 func (u *User)  GenerateToken() (string, int64){
 	u.Token = tool.Md5(string(tool.RandNum(999999)) + string(u.ID) + conf.Server.Md5Key)
 	u.ExpiresAt = time.Now().AddDate(0,0, 3).Unix()
@@ -122,7 +152,7 @@ func (u *User)  GenerateToken() (string, int64){
 }
 
 func (u *User) AuthLoginPassword(loginPassword string) bool {
-	return u.Name == u.getSignPassword(loginPassword)
+	return u.Password == u.getSignPassword(loginPassword)
 }
 
 func(u *User)  getSignPassword(password string) string{

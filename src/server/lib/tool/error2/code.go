@@ -5,7 +5,5 @@ const (
 	Default 		= "0"
 
 	//根据前端需要自定义错误码，前端根据错误码进行不同的操作
-	ErrSystem       = "100"
-	ErrCfg          = "101"
-	ErrProtocol     = "102"
+	NetworkReconnect = "100" //网络中断，请重新连接
 )

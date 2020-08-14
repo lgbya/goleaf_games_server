@@ -1,5 +1,12 @@
 package msg
 
+type C2S_Heart struct {
+}
+
+type S2C_Heart struct {
+	Time 	int64 	`json:"time"`
+}
+
 type S2C_Error struct {
 	Code  string	`json:"code"`
 	Message string	`json:"message"`
@@ -8,7 +15,7 @@ type S2C_Error struct {
 type C2S_Register struct {
 	Name            string `json:"name"`
 	Password        string `json:"password"`
-	ConfirmPassword string `json:"confirm_password"`
+	ConfirmPassword string `json:"confirmPassword"`
 }
 
 
@@ -34,22 +41,31 @@ type S2C_Login struct {
 }
 
 type C2S_MatchPlayer struct {
-	GameId 	int `json:"game_id"`
+	GameId 	int `json:"gameId"`
 }
 
 type S2C_MatchPlayer struct {
-	GameId  int `json:"game_id"`
+	GameId  int `json:"gameId"`
 }
 
 type C2S_CancelMatch struct {
 }
 
-type S2C_CancelMatch struct {
+type S2C_CancelMatch  struct {
 }
 
 type S2C_StartGame struct {
-	RoomId   int                `json:"room_id"`
-	UserList map[int]M_UserInfo `json:"user_list"`
+	RoomId   int                `json:"roomId"`
+	GameId 	 int 				`json:"gameId"`
+	UserList map[int]M_UserInfo `json:"userList"`
+	Start map[string]interface{} `json:"start"`
+}
+
+type S2C_ContinueGame struct {
+	RoomId   int                `json:"roomId"`
+	GameId 	 int 				`json:"gameId"`
+	UserList map[int]M_UserInfo `json:"userList"`
+	Continue map[string]interface{} `json:"continue"`
 }
 
 type C2S_MoraPlaying struct {
@@ -62,8 +78,9 @@ type S2C_MoraPlaying struct {
 	Ply int	`json:"ply"`
 }
 
-type S2C_MoreReslut struct {
+type S2C_MoreResult struct {
 	WinUid int `json:"win_uid"`
+	GameInfo map[int]int `json:"gameInfo"`
 }
 
 type M_UserInfo struct {

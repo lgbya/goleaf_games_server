@@ -1,7 +1,6 @@
 package mora
 
 import (
-	"fmt"
 	"github.com/name5566/leaf/gate"
 	"github.com/name5566/leaf/log"
 	"math"
@@ -13,7 +12,7 @@ import (
 	"server/msg"
 )
 
-var lMatch = make(map[int]int)
+var matchList = make(map[int]int)
 
 type Mora struct {
 	Info map[int]int
@@ -28,30 +27,30 @@ func handler(m interface{}, h interface{})  {
 	internal.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
 }
 
-func (m *Mora) MatchPlayer(user *models.User, protocol interface{})  {
-	gameId := protocol.(*msg.C2S_MatchPlayer).GameId
+func (m *Mora) MatchPlayer(user *models.User, args ...interface{})  {
+	gameId := args[0].(*msg.C2S_MatchPlayer).GameId
 
 	//将当前角色uid加入对应的游戏匹配列表
-	lMatch[user.Uid] = user.Uid
+	matchList[user.Uid] = user.Uid
 
 	//返回消息告诉前端已经加入匹配等待中
 	(*user.Agent).WriteMsg(&msg.S2C_MatchPlayer{ GameId : gameId })
 
 	//如果人数大于二人
-	if len(lMatch) >= 2 {
-		mapInt2User := make(map[int]*models.User)
+	if len(matchList) >= 2 {
+		userList := make(map[int]*models.User)
 		roomId := new(models.Room).GetUniqueID()
 		modUser := new(models.User)
-		for _, uid := range lMatch{
+		for _, uid := range matchList {
 			if user, found	 := modUser.Uid2User(uid); found{
-				delete(lMatch, user.Uid)
-				mapInt2User[uid] = user
+				delete(matchList, user.Uid)
+				userList[uid] = user
 			}
 
-			if len(mapInt2User) == 2 {
+			if len(userList) == 2 {
 				log.Debug("============Start==========")
 				more := Mora{Info: map[int]int{}}
-				internal.ChanRPC.Go("CommonInitGame", roomId, gameId, mapInt2User, more)
+				internal.ChanRPC.Go("StartGame", roomId, gameId, userList, more)
 				break
 			}
 		}
@@ -59,13 +58,20 @@ func (m *Mora) MatchPlayer(user *models.User, protocol interface{})  {
 	}
 }
 
-func (m *Mora) CancelMatch(user *models.User, protocol interface{})  {
-	delete(lMatch, user.Uid)
-	(*user.Agent).WriteMsg(&msg.S2C_MatchPlayer{})
+func (m *Mora) CancelMatch(user *models.User, args ...interface{})  {
+	delete(matchList, user.Uid)
+	(*user.Agent).WriteMsg(&msg.S2C_CancelMatch{})
 }
 
-func (m *Mora) StartGame(room *models.Room)  {
+func (m *Mora) StartGame(room *models.Room, args ...interface{}) map[string]interface{} {
+	return make(map[string]interface{})
+}
 
+func (m *Mora) ContinueGame(user *models.User, room *models.Room, args ...interface{}) map[string]interface{} {
+	continueInfo := make(map[string]interface{})
+	userGameInfo := room.GameInfo.(Mora).Info[user.Uid]
+	continueInfo["ply"] = userGameInfo
+	return continueInfo
 }
 
 func (m *Mora) handlerMoraPlaying(args []interface{}) {
@@ -77,7 +83,7 @@ func (m *Mora) handlerMoraPlaying(args []interface{}) {
 		//修改角色缓存信息在游戏中
 		user, found := common.CheckLogin(agent)
 		if !found {
-			error2.FatalMsg(agent, error2.ErrSystem, "请登录后再操作！")
+			error2.Msg(agent, "请登录后再操作！")
 			return
 		}
 
@@ -92,12 +98,10 @@ func (m *Mora) handlerMoraPlaying(args []interface{}) {
 
 		room.RoomId3Room(user.InRoomId, room)
 
-		for _, user2 := range room.UserList {
-			(*user2.Agent).WriteMsg(&msg.S2C_MoraPlaying{
-				Uid: user.Uid,
-				Ply: message.Ply,
-			})
-		}
+		(*user.Agent).WriteMsg(&msg.S2C_MoraPlaying{
+			Uid: user.Uid,
+			Ply: message.Ply,
+		})
 		//所有人都出完拳，判断输赢
 		if len(gameInfo.Info) == len(room.UserList) {
 			m.endGame(room)
@@ -107,10 +111,11 @@ func (m *Mora) handlerMoraPlaying(args []interface{}) {
 
 func (m *Mora) endGame(room *models.Room)  {
 	winUid, prePly := 0, 0
+	gameInfo := make(map[int]int)
 	for uid, ply := range room.GameInfo.(Mora).Info {
+		gameInfo[uid] = ply
 		if prePly != 0 {
 			absPly := math.Abs(float64(ply - prePly))
-			fmt.Println(absPly, ply, prePly)
 			if (ply < prePly && absPly == 1) || (ply > prePly && absPly == 2) {
 				winUid = uid
 			} else if prePly == ply {
@@ -130,8 +135,9 @@ func (m *Mora) endGame(room *models.Room)  {
 			user.Uid3User(user)
 		}
 
-		(*user.Agent).WriteMsg(&msg.S2C_MoreReslut{
+		(*user.Agent).WriteMsg(&msg.S2C_MoreResult{
 			WinUid: winUid,
+			GameInfo: gameInfo,
 		})
 	}
 	new(models.Room).RoomId4Room(room.ID)

@@ -4,9 +4,12 @@ import (
 	"github.com/name5566/leaf/gate"
 	"github.com/name5566/leaf/log"
 	"reflect"
+	"server/game"
 	"server/lib/tool/error2"
 	"server/models"
 	"server/msg"
+	"time"
+	"unicode/utf8"
 )
 
 func handler(m interface{}, h interface{}) {
@@ -14,6 +17,7 @@ func handler(m interface{}, h interface{}) {
 }
 
 func init() {
+	handler(&msg.C2S_Heart{}, handleHeart)
 	handler(&msg.C2S_Register{}, handleRegister)
 	handler(&msg.C2S_Login{}, handleLogin)
 }
@@ -22,8 +26,23 @@ func handleRegister(args []interface{})   {
 	message := args[0].(*msg.C2S_Register)
 	agent := args[1].(gate.Agent)
 
+	if  utf8.RuneCountInString(message.Name) < 6 {
+		error2.Msg(agent, "账号长度要6位或以上")
+		return
+	}
+
+	if  utf8.RuneCountInString(message.Password) < 6 {
+		error2.Msg(agent, "密码长度要6位或以上")
+		return
+	}
+
 	if message.Password != message.ConfirmPassword {
-		error2.Msg(agent, "")
+		error2.Msg(agent, "确认密码错误")
+		return
+	}
+
+	if message.Password != message.ConfirmPassword {
+		error2.Msg(agent, "确认密码错误")
 		return
 	}
 
@@ -41,7 +60,7 @@ func handleRegister(args []interface{})   {
 	}
 
 	//注册成功，写入数据
-	agent.SetUserData(&models.Agent{ID:user.Uid})
+	agent.SetUserData(&models.Agent{ID:user.Uid, HeartTime : time.Now().Unix()})
 	user.Agent = &agent
 	user.Uid3User(user)
 
@@ -60,37 +79,33 @@ func handleLogin(args []interface{})  {
 	message := args[0].(*msg.C2S_Login)
 	agent := args[1].(gate.Agent)
 
-	if agent.UserData() != nil {
-		error2.Msg(agent, "你已经登录了！")
-		return
-	}
-
 	user := new(models.User)
 	user, ok := user.FindLoginName(message.Name)
 
+	//防止重复登录和在不同设备登录
+	if user.CheckRepeatLogin(user.Uid) {
+		error2.Msg(agent, "你已经登录了！")
+		return
+	}
+	
 	if !ok {
 		error2.Msg(agent, "该玩家名不存在！")
 		return
 	}
 
-	if user.AuthLoginPassword(message.Password) {
+	if ! user.AuthLoginPassword(message.Password) {
 		error2.Msg(agent, "登录密码错误！")
 		return
 	}
 
-	oldUser, found := user.Uid2User(user.Uid)
-	if found  {
-		if oldUser.Status == models.GamePlay {
-			user = oldUser
-		}else{
-			error2.Msg(agent, "该玩家在其他设备已登录！")
-			return
-		}
+	if oldUser, found := user.Uid2User(user.Uid);found {
+		user = oldUser
 	}
 
 	user.Agent = &agent
-	agent.SetUserData(&models.Agent{ID:user.Uid})
+	agent.SetUserData(&models.Agent{ID:user.Uid, HeartTime : time.Now().Unix()})
 	user.Uid3User(user)
+	user.Common3LoginUid(user.Uid, &agent)
 
 	agent.WriteMsg(&msg.S2C_Login{
 		Uid: user.Uid,
@@ -100,4 +115,12 @@ func handleLogin(args []interface{})  {
 		ExpiresTime: user.ExpiresAt,
 	})
 
+	game.ChanRPC.Go("ContinueGame", user)
+
+}
+
+func handleHeart(args []interface{})  {
+	agent := args[1].(gate.Agent)
+	nowTime := time.Now().Unix()
+	agent.WriteMsg(&msg.S2C_Heart{Time : nowTime})
 }

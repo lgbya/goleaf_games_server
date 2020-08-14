@@ -54,13 +54,13 @@ func handleMatchPlayer(args []interface{}) {
 
 func handleCancelMatch(args []interface{})  {
 	//获取基本信息
-	protocol := args[0].(*msg.C2S_MatchPlayer)
+	protocol := args[0].(*msg.C2S_CancelMatch)
 	agent := args[1].(gate.Agent)
 
 	//修改角色缓存信息在游戏中
 	user, ok := common.CheckLogin(agent)
-	if !ok && user.Status != models.GameMath{
-		error2.FatalMsg(agent, error2.ErrSystem, "未匹配游戏")
+	if ok == false || user.Status != models.GameMath{
+		error2.Msg(agent, "未匹配游戏")
 		return
 	}
 	service, ok := NewGameService(user.GameId)
