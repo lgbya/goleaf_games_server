@@ -12,6 +12,8 @@ import (
 	"server/msg"
 )
 
+
+
 var matchList = make(map[int]int)
 
 type Mora struct {
@@ -76,10 +78,17 @@ func (m *Mora) ContinueGame(user *models.User, room *models.Room, args ...interf
 
 func (m *Mora) handlerMoraPlaying(args []interface{}) {
 	internal.GetSkeleton().Go(func() {
+
+
 		//获取基本信息
 		message := args[0].(*msg.C2S_MoraPlaying)
 		agent := args[1].(gate.Agent)
 
+		if !(message.Ply == 1 || message.Ply == 2 || message.Ply == 3){
+			error2.Msg(agent, "选择错误！")
+			return
+		}
+		
 		//修改角色缓存信息在游戏中
 		user, found := common.CheckLogin(agent)
 		if !found {
