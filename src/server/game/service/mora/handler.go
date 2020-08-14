@@ -127,6 +127,8 @@ func (m *Mora) endGame(room *models.Room)  {
 		prePly = ply
 	}
 
+	end := make(map[string]interface{})
+	end["gameInfo"] = gameInfo
 	for _, user := range room.UserList {
 		user, found := user.Uid2User(user.Uid)
 		if found {
@@ -135,9 +137,9 @@ func (m *Mora) endGame(room *models.Room)  {
 			user.Uid3User(user)
 		}
 
-		(*user.Agent).WriteMsg(&msg.S2C_MoreResult{
+		(*user.Agent).WriteMsg(&msg.S2C_EndGame{
 			WinUid: winUid,
-			GameInfo: gameInfo,
+			End: end,
 		})
 	}
 	new(models.Room).RoomId4Room(room.ID)

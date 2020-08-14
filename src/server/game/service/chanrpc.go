@@ -10,13 +10,11 @@ import (
 	"server/msg"
 )
 
-
 func init() {
 	internal.GetSkeleton().RegisterChanRPC("NewAgent", rpcNewAgent)
 	internal.GetSkeleton().RegisterChanRPC("CloseAgent", rpcCloseAgent)
 	internal.GetSkeleton().RegisterChanRPC("StartGame", rpcStartGame)
 	internal.GetSkeleton().RegisterChanRPC("ContinueGame", rpcContinueGame)
-
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -44,7 +42,6 @@ func rpcCloseAgent(args []interface{}) {
 	_ = agent
 }
 
-//
 func rpcStartGame(args []interface{}) {
 	roomId := args[0].(int)
 	gameId := args[1].(int)
@@ -79,6 +76,7 @@ func rpcStartGame(args []interface{}) {
 		user.Uid3User(user)
 		(*user.Agent).WriteMsg(&msg.S2C_StartGame{
 			RoomId :  roomId,
+			GameId: gameId,
 			UserList: mUserList,
 			Start: startInfo,
 		})

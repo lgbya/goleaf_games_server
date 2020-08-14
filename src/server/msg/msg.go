@@ -31,6 +31,6 @@ func init() {
 	Processor.Register(&C2S_MoraPlaying{})
 	Processor.Register(&S2C_MoraPlaying{})
 
-	Processor.Register(&S2C_MoreResult{})
+	Processor.Register(&S2C_EndGame{})
 	Processor.Register(&S2C_ContinueGame{})
 }

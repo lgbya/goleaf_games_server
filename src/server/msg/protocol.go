@@ -68,6 +68,11 @@ type S2C_ContinueGame struct {
 	Continue map[string]interface{} `json:"continue"`
 }
 
+type S2C_EndGame struct {
+	WinUid 	 int `json:"winUid"`
+	End map[string]interface{} `json:"end"`
+}
+
 type C2S_MoraPlaying struct {
 	Ply int	`json:"ply"`
 }
@@ -78,10 +83,7 @@ type S2C_MoraPlaying struct {
 	Ply int	`json:"ply"`
 }
 
-type S2C_MoreResult struct {
-	WinUid int `json:"win_uid"`
-	GameInfo map[int]int `json:"gameInfo"`
-}
+
 
 type M_UserInfo struct {
 	Uid 	int 	`json:"uid"`
