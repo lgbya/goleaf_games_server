@@ -88,11 +88,11 @@ func (m *Mora) handlerMoraPlaying(args []interface{}) {
 			error2.Msg(agent, "选择错误！")
 			return
 		}
-		
+
 		//修改角色缓存信息在游戏中
 		user, found := common.CheckLogin(agent)
 		if !found {
-			error2.Msg(agent, "请登录后再操作！")
+			error2.FatalMsg(agent, error2.LoginInAgain,"请登录后再操作！")
 			return
 		}
 

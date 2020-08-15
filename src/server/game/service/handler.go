@@ -30,7 +30,7 @@ func handleMatchPlayer(args []interface{}) {
 	//修改角色缓存信息在游戏中
 	user, ok := common.CheckLogin(agent)
 	if !ok{
-		error2.Msg(agent,"请登录后再操作！")
+		error2.FatalMsg(agent, error2.LoginInAgain, "请登录后再操作！")
 		return
 	}
 
@@ -59,10 +59,17 @@ func handleCancelMatch(args []interface{})  {
 
 	//修改角色缓存信息在游戏中
 	user, ok := common.CheckLogin(agent)
-	if ok == false || user.Status != models.GameMath{
+
+	if !ok {
+		error2.FatalMsg(agent, error2.LoginInAgain,"请登录后再操作！")
+		return
+	}
+
+	if user.Status != models.GameMath{
 		error2.Msg(agent, "未匹配游戏")
 		return
 	}
+
 	service, ok := NewGameService(user.GameId)
 	if !ok  {
 		error2.Msg(agent,  "游戏不存在！")

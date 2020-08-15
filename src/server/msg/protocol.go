@@ -24,7 +24,7 @@ type S2C_Register struct {
 	Name 	string	`json:"name"`
 	Gold	int 	`json:"gold"`
 	Token 	string	`json:"token"`
-	ExpiresTime int64 `json:"token"`
+	ExpiresTime int64 `json:"expiresTime"`
 }
 
 type C2S_Login struct {
@@ -37,8 +37,22 @@ type S2C_Login struct {
 	Name 	string	`json:"name"`
 	Gold	int 	`json:"gold"`
 	Token 	string	`json:"token"`
-	ExpiresTime int64 `json:"token"`
+	ExpiresTime int64 `json:"expiresTime"`
 }
+
+
+type C2S_ResetLogin struct {
+	Token     string	`json:"token"`
+}
+
+type S2C_ResetLogin struct {
+	Uid 	int 	`json:"uid"`
+	Name 	string	`json:"name"`
+	Gold	int 	`json:"gold"`
+	Token 	string	`json:"token"`
+	ExpiresTime int64 `json:"expiresTime"`
+}
+
 
 type C2S_MatchPlayer struct {
 	GameId 	int `json:"gameId"`

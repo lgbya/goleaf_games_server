@@ -76,12 +76,6 @@ func (u *User) Create(loginName string, loginPassword string) (*User, error) {
 	return u, nil
 }
 
-//刷新缓存
-//func (u *UserList) FlushCache() {
-//	if u.Token != "" && u.Uid > 0 {
-//		u.Uid3User(u)
-//	}
-//}
 
 //删除缓存并修改数据库
 func (u *User) DeleteCache(uid int)  {
@@ -89,21 +83,11 @@ func (u *User) DeleteCache(uid int)  {
 	db.New().Save(user)
 }
 
-//删除缓存
-func (u *User) uid4User(uid int)  *User {
-	if user, ok := u.Uid2User(uid); ok{
-		cache.New().Delete(u.ckUid2User(u.Uid))
-		return user
-	}
-	return u
+//用户uid对应的用户信息
+func (u *User) ckUid2User(uid int) string {
+	return "key:uid|data:user=" + string(uid)
 }
 
-//根据uid修改用户信息
-func (u *User) Uid3User(user *User)  {
-	cache.New().SetNoExpiration(u.ckUid2User(user.Uid), user)
-}
-
-//根据uid修改用户角色
 func (u *User) Uid2User(uid int)  (*User, bool) {
 
 	if data , found :=cache.New().Get(u.ckUid2User(uid)); found{
@@ -112,8 +96,21 @@ func (u *User) Uid2User(uid int)  (*User, bool) {
 	return nil, false
 }
 
-func (u *User) ckUid2User(uid int) string {
-	return "key:uid|data:user=" + string(uid)
+func (u *User) Uid3User(user *User)  {
+	cache.New().SetNoExpiration(u.ckUid2User(user.Uid), user)
+}
+
+func (u *User) uid4User(uid int)  *User {
+	if user, ok := u.Uid2User(uid); ok{
+		cache.New().Delete(u.ckUid2User(u.Uid))
+		return user
+	}
+	return u
+}
+
+//登录后存储在公共map中
+func (u *User) ckCommon2LoginUid() string {
+	return "common|data:uid_list"
 }
 
 func (u *User) Common2LoginUid() map[int]*gate.Agent{
@@ -135,8 +132,29 @@ func (u *User) Common4LoginUid(uid int)  {
 	cache.New().SetNoExpiration(u.ckCommon2LoginUid(), uid2Agent)
 }
 
-func (u *User) ckCommon2LoginUid() string {
-	return "common|data:uid_list"
+//临时的存储token对应的用户关系
+func (u *User) ckTempToken2User(token string) string {
+	return "key:uid|data:reset_user=" + token
+}
+
+func (u *User) TempToken2User(token string)  (*User, bool) {
+
+	if data , found :=cache.New().Get(u.ckTempToken2User(token)); found{
+		return data.(*User), found
+	}
+	return nil, false
+}
+
+func (u *User) TempToken3User(user *User, time time.Duration)  {
+	cache.New().Set(u.ckTempToken2User(user.Token), user, time)
+}
+
+func (u *User) TempToken4User(token string)  *User {
+	if user, ok := u.TempToken2User(token); ok{
+		cache.New().Delete(u.ckUid2User(u.Uid))
+		return user
+	}
+	return u
 }
 
 func (u *User) CheckRepeatLogin(uid int) bool {

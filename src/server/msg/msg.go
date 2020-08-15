@@ -19,6 +19,9 @@ func init() {
 	Processor.Register(&C2S_Login{})
 	Processor.Register(&S2C_Login{})
 
+	Processor.Register(&C2S_ResetLogin{})
+	Processor.Register(&S2C_ResetLogin{})
+
 	Processor.Register(&C2S_MatchPlayer{})
 	Processor.Register(&S2C_MatchPlayer{})
 

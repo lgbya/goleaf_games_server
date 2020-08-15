@@ -8,6 +8,7 @@ import (
 	"server/lib/tool/error2"
 	"server/models"
 	"server/msg"
+	"time"
 )
 
 func init() {
@@ -37,6 +38,7 @@ func rpcCloseAgent(args []interface{}) {
 		}
 
 		user.Common4LoginUid(user.Uid)
+		user.TempToken3User(user, 30 * time.Second)
 	}
 
 	_ = agent
