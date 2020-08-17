@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"github.com/name5566/leaf/log"
 	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
 )
 
 var Server struct {
@@ -31,7 +34,12 @@ type SqlSrv struct {
 }
 
 func init() {
-	data, err := ioutil.ReadFile("bin/conf/server.json")
+
+	file, _ := exec.LookPath(os.Args[0])
+	path, _ := filepath.Abs(file)
+	dir := filepath.Dir(path)
+
+	data, err := ioutil.ReadFile(dir+"/conf/server.json")
 
 	if err != nil {
 		log.Fatal("%v", err)
@@ -43,3 +51,4 @@ func init() {
 	}
 	//log.Release("===========解析配置成功=========== \n")
 }
+
