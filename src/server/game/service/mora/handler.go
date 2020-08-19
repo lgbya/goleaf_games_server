@@ -16,20 +16,20 @@ import (
 
 var matchList = make(map[int]int)
 
-type Mora struct {
+type Mode struct {
 	Info map[int]int
 }
 
 func init() {
-	m := new(Mora)
-	handler(&msg.C2S_MoraPlaying{}, m.handlerMoraPlaying)
+	mode := new(Mode)
+	handler(&msg.C2S_MoraPlay{}, mode.handlePlay)
 }
 
 func handler(m interface{}, h interface{})  {
 	internal.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
 }
 
-func (m *Mora) MatchPlayer(user *models.User, args ...interface{})  {
+func (m *Mode) MatchPlayer(user *models.User, args ...interface{})  {
 	gameId := args[0].(*msg.C2S_MatchPlayer).GameId
 
 	//将当前角色uid加入对应的游戏匹配列表
@@ -51,7 +51,7 @@ func (m *Mora) MatchPlayer(user *models.User, args ...interface{})  {
 
 			if len(userList) == 2 {
 				log.Debug("============Start==========")
-				more := Mora{Info: map[int]int{}}
+				more := Mode{Info: map[int]int{}}
 				internal.ChanRPC.Go("StartGame", roomId, gameId, userList, more)
 				break
 			}
@@ -60,34 +60,35 @@ func (m *Mora) MatchPlayer(user *models.User, args ...interface{})  {
 	}
 }
 
-func (m *Mora) CancelMatch(user *models.User, args ...interface{})  {
+func (m *Mode) CancelMatch(user *models.User, args ...interface{})  {
 	delete(matchList, user.Uid)
 	(*user.Agent).WriteMsg(&msg.S2C_CancelMatch{})
 }
 
-func (m *Mora) StartGame(room *models.Room, args ...interface{}) map[string]interface{} {
+func (m *Mode) StartGame(room *models.Room, args ...interface{}) map[string]interface{} {
 	return make(map[string]interface{})
 }
 
-func (m *Mora) ContinueGame(user *models.User, room *models.Room, args ...interface{}) map[string]interface{} {
+func (m *Mode) ContinueGame(user *models.User, room *models.Room, args ...interface{}) map[string]interface{} {
 	continueInfo := make(map[string]interface{})
-	userGameInfo := room.GameInfo.(Mora).Info[user.Uid]
+	userGameInfo := room.GameInfo.(Mode).Info[user.Uid]
 	continueInfo["ply"] = userGameInfo
 	return continueInfo
 }
 
-func (m *Mora) handlerMoraPlaying(args []interface{}) {
+func (m *Mode) handlePlay(args []interface{}) {
 	internal.GetSkeleton().Go(func() {
 
 
 		//获取基本信息
-		message := args[0].(*msg.C2S_MoraPlaying)
+		message := args[0].(*msg.C2S_MoraPlay)
 		agent := args[1].(gate.Agent)
 
 		if !(message.Ply == 1 || message.Ply == 2 || message.Ply == 3){
 			error2.Msg(agent, "选择错误！")
 			return
 		}
+
 
 		//修改角色缓存信息在游戏中
 		user, found := common.CheckLogin(agent)
@@ -101,13 +102,13 @@ func (m *Mora) handlerMoraPlaying(args []interface{}) {
 			error2.Msg(agent, "未加入游戏！")
 			return
 		}
-		gameInfo := room.GameInfo.(Mora)
+		gameInfo := room.GameInfo.(Mode)
 		gameInfo.Info[user.Uid] = message.Ply
 		room.GameInfo = gameInfo
 
-		room.RoomId3Room(user.InRoomId, room)
+		room.RoomId3Room(room)
 
-		(*user.Agent).WriteMsg(&msg.S2C_MoraPlaying{
+		(*user.Agent).WriteMsg(&msg.S2C_MoraPlay{
 			Uid: user.Uid,
 			Ply: message.Ply,
 		})
@@ -118,10 +119,10 @@ func (m *Mora) handlerMoraPlaying(args []interface{}) {
 	}, func() {})
 }
 
-func (m *Mora) endGame(room *models.Room)  {
+func (m *Mode) endGame(room *models.Room)  {
 	winUid, prePly := 0, 0
 	gameInfo := make(map[int]int)
-	for uid, ply := range room.GameInfo.(Mora).Info {
+	for uid, ply := range room.GameInfo.(Mode).Info {
 		gameInfo[uid] = ply
 		if prePly != 0 {
 			absPly := math.Abs(float64(ply - prePly))
@@ -139,17 +140,11 @@ func (m *Mora) endGame(room *models.Room)  {
 	end := make(map[string]interface{})
 	end["gameInfo"] = gameInfo
 	for _, user := range room.UserList {
-		user, found := user.Uid2User(user.Uid)
-		if found {
-			user.InRoomId = 0
-			user.Status = models.GameFree
-			user.Uid3User(user)
-		}
 
 		(*user.Agent).WriteMsg(&msg.S2C_EndGame{
 			WinUid: winUid,
 			End: end,
 		})
 	}
-	new(models.Room).RoomId4Room(room.ID)
+	room.StopRoom()
 }

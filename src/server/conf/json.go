@@ -38,7 +38,7 @@ func init() {
 	file, _ := exec.LookPath(os.Args[0])
 	path, _ := filepath.Abs(file)
 	dir := filepath.Dir(path)
-
+	dir = "bin/"
 	data, err := ioutil.ReadFile(dir+"/conf/server.json")
 
 	if err != nil {

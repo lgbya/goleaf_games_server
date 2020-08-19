@@ -2,6 +2,7 @@ package service
 
 import (
 	"server/game/service/mora"
+	"server/game/service/tictactoe"
 	"server/models"
 )
 
@@ -13,10 +14,10 @@ type GameService interface {
 }
 
 
-
 func  NewGameService(gameId int ) (GameService, bool)  {
 	serviceList := map[int]GameService{
-		1001 : new(mora.Mora),
+		1001 : new(mora.Mode),
+		1002 : new(tictactoe.Mode),
 	}
 	service, ok := serviceList[gameId]
 	return service, ok

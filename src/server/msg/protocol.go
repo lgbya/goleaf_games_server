@@ -87,19 +87,29 @@ type S2C_EndGame struct {
 	End map[string]interface{} `json:"end"`
 }
 
-type C2S_MoraPlaying struct {
+type M_UserInfo struct {
+	Uid 	int 	`json:"uid"`
+	Name 	string	`json:"name"`
+}
+
+//================玩法协议===============
+//猜拳
+type C2S_MoraPlay struct {
 	Ply int	`json:"ply"`
 }
 
-
-type S2C_MoraPlaying struct {
+type S2C_MoraPlay struct {
 	Uid int `json:"uid"`
 	Ply int	`json:"ply"`
 }
 
+//井字棋
+type C2S_TictactoePlay struct {
+	Number int	`json:"number"`
+}
 
-
-type M_UserInfo struct {
-	Uid 	int 	`json:"uid"`
-	Name 	string	`json:"name"`
+type S2C_TictactoePlay struct {
+	Uid 	int `json:"uid"`
+	Number int	`json:"number"`
+	CurrentUid int `json:"currentUid"`
 }

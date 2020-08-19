@@ -28,3 +28,23 @@ func User2MUserList(lUser map[int]*models.User) map[int]msg.M_UserInfo {
 	}
 	return  mUsers
 }
+
+func CheckInRoom(agent gate.Agent) (*models.User, *models.Room) {
+
+	userAgent, ok := agent.UserData().(*models.Agent)
+	if !ok {
+		return nil, nil
+	}
+
+	user, ok := new(models.User).Uid2User(userAgent.ID)
+	if !ok{
+		return nil, nil
+	}
+
+	room, ok := new(models.Room).RoomId2Room(user.InRoomId)
+	if !ok {
+		return nil, nil
+	}
+
+	return user, room
+}

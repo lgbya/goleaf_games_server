@@ -28,12 +28,13 @@ func init() {
 	Processor.Register(&C2S_CancelMatch{})
 	Processor.Register(&S2C_CancelMatch{})
 
-
 	Processor.Register(&S2C_StartGame{})
-
-	Processor.Register(&C2S_MoraPlaying{})
-	Processor.Register(&S2C_MoraPlaying{})
 
 	Processor.Register(&S2C_EndGame{})
 	Processor.Register(&S2C_ContinueGame{})
+
+	Processor.Register(&C2S_MoraPlay{})
+	Processor.Register(&S2C_MoraPlay{})
+	Processor.Register(&C2S_TictactoePlay{})
+	Processor.Register(&S2C_TictactoePlay{})
 }

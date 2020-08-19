@@ -17,7 +17,6 @@ func init() {
 	handler(&msg.C2S_CancelMatch{}, handleCancelMatch)
 }
 
-
 func handler(m interface{}, h interface{})  {
 	internal.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
 }

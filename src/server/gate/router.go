@@ -13,7 +13,6 @@ func init() {
 	msg.Processor.SetRouter(&msg.C2S_ResetLogin{}, login.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_MatchPlayer{}, game.ChanRPC)
 	msg.Processor.SetRouter(&msg.C2S_CancelMatch{}, game.ChanRPC)
-	msg.Processor.SetRouter(&msg.C2S_MoraPlaying{}, game.ChanRPC)
-
-
+	msg.Processor.SetRouter(&msg.C2S_MoraPlay{}, game.ChanRPC)
+	msg.Processor.SetRouter(&msg.C2S_TictactoePlay{}, game.ChanRPC)
 }

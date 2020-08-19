@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/name5566/leaf/gate"
 	"github.com/name5566/leaf/log"
 	"server/game/internal"
@@ -55,7 +56,7 @@ func rpcStartGame(args []interface{}) {
 		GameId:gameId, ID:roomId,
 		UserList: userList, GameInfo: gameInfo,
 	}
-	new(models.Room).RoomId3Room(roomId, room)
+	new(models.Room).RoomId3Room(room)
 	service, ok := NewGameService(gameId)
 	if !ok  {
 		for _, user := range userList {
@@ -69,7 +70,7 @@ func rpcStartGame(args []interface{}) {
 	}
 	//不同游戏的开始钩子
 	startInfo := service.StartGame(room)
-
+	fmt.Println(startInfo)
 	//通知房间内的所有玩家
 	mUserList := common.User2MUserList(userList)
 	for _, user := range userList {

@@ -28,11 +28,22 @@ func (r *Room) RoomId2Room(roomId int) (*Room, bool){
 	return nil, false
 }
 
-func (r *Room) RoomId3Room(roomId int, data *Room){
-	cache.New().SetNoExpiration(r.ckRoomId2Room(roomId), data)
+func (r *Room) RoomId3Room( data *Room){
+	cache.New().SetNoExpiration(r.ckRoomId2Room(data.ID), data)
 }
 
 func (r *Room) RoomId4Room(roomId int ){
 	cache.New().Delete(r.ckRoomId2Room(roomId))
 }
 
+func (r *Room) StopRoom()  {
+	for _, user := range r.UserList {
+		user, found := user.Uid2User(user.Uid)
+		if found {
+			user.InRoomId = 0
+			user.Status = GameFree
+			user.Uid3User(user)
+		}
+	}
+	r.RoomId4Room(r.ID)
+}

@@ -1,42 +1,212 @@
 package tictactoe
 
 import (
+	"github.com/chenhg5/collection"
+	"github.com/name5566/leaf/gate"
+	"github.com/name5566/leaf/log"
+	"github.com/shopspring/decimal"
 	"reflect"
 	"server/game/internal"
+	"server/game/service/common"
+	"server/lib/tool/error2"
 	"server/models"
 	"server/msg"
 )
 
-var lMatch = make(map[int]int)
+var matchList = make(map[int]int)
 
-type Tictactoe struct {
-	Info map[int]int
+type Mode struct {
+	Info       map[int]player `json:"info"`
+	Blank      []int	`json:"blank"`
+	CurrentUid int		`json:"currentUid"`
+}
+
+type player struct {
+	Icon int   `json:"icon"`
+	List []int `json:"list"`
 }
 
 func init() {
+	mode := new(Mode)
+	handler(&msg.C2S_TictactoePlay{}, mode.handlePlay)
 }
 
 func handler(m interface{}, h interface{})  {
 	internal.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
 }
 
-func (t *Tictactoe) MatchPlayer(user *models.User, protocol interface{})  {
+func (m *Mode) MatchPlayer(user *models.User, args ...interface{})  {
+	gameId := args[0].(*msg.C2S_MatchPlayer).GameId
+
+	//将当前角色uid加入对应的游戏匹配列表
+	matchList[user.Uid] = user.Uid
+
+	//返回消息告诉前端已经加入匹配等待中
+	(*user.Agent).WriteMsg(&msg.S2C_MatchPlayer{ GameId : gameId })
+
+	//如果人数大于二人
+	if len(matchList) >= 2 {
+		userList := make(map[int]*models.User)
+		roomId := new(models.Room).GetUniqueID()
+		modUser := new(models.User)
+		for _, uid := range matchList {
+			if user, found	 := modUser.Uid2User(uid); found{
+				delete(matchList, user.Uid)
+				userList[uid] = user
+			}
+
+			if len(userList) == 2 {
+				log.Debug("============Start==========")
+				mode := Mode{Info: map[int]player{}, Blank:[]int{1,2,3,4,5,6,7,8,9}}
+				internal.ChanRPC.Go("StartGame", roomId, gameId, userList, mode)
+				break
+			}
+		}
+
+	}
+}
+
+func (m *Mode) CancelMatch(user *models.User, args ...interface{})  {
+	delete(matchList, user.Uid)
+	(*user.Agent).WriteMsg(&msg.S2C_CancelMatch{})
+}
+
+func (m *Mode) StartGame(room *models.Room, args ...interface{}) map[string]interface{} {
+	//为玩家分配对号和叉号
+	gameInfo := room.GameInfo.(Mode)
+	icon := 0
+	userIcon := make(map[int]int)
+	for uid := range room.UserList {
+		userIcon[uid] = icon
+		gameInfo.Info[uid] = player{
+			Icon: icon,
+			List: []int{},
+		}
+		icon++
+		gameInfo.CurrentUid = uid
+	}
+	room.GameInfo = gameInfo
+	room.RoomId3Room(room)
+
+	return map[string]interface{}{
+		"currentUid" : gameInfo.CurrentUid,
+		"userIcon" : userIcon,
+	}
+}
+
+func (m *Mode) ContinueGame(user *models.User, room *models.Room, args ...interface{}) map[string]interface{} {
+	continueInfo := make(map[string]interface{})
+	gameInfo := room.GameInfo.(Mode)
+	continueInfo["mode"] = gameInfo
+	return continueInfo
+}
+
+func (m *Mode) handlePlay(args []interface{}) {
+
+	//获取基本信息
+	message := args[0].(*msg.C2S_TictactoePlay)
+	agent := args[1].(gate.Agent)
+
+	//修改角色缓存信息在游戏中
+	user, room := common.CheckInRoom(agent)
+	if user == nil || room == nil{
+		error2.FatalMsg(agent, error2.LoginInAgain, "未加入游戏！")
+		return
+	}
+
+	number := message.Number
+	gameInfo := room.GameInfo.(Mode)
+
+	result := collection.Collect(gameInfo.Blank).Contains(number)
+	if ! (number >0 && result) {
+		error2.Msg(agent, "选择错误！")
+		return
+	}
+
+	if gameInfo.CurrentUid != user.Uid {
+		error2.Msg(agent, "未轮到你操作！")
+		return
+	}
+
+	//记录当前玩家选择的号码
+	playerInfo := gameInfo.Info[user.Uid]
+	playerInfo.List = append(playerInfo.List, number)
+	gameInfo.Info[user.Uid] = playerInfo
+	for uid := range gameInfo.Info {
+		if gameInfo.CurrentUid != uid {
+			gameInfo.CurrentUid = uid
+			break
+		}
+	}
+
+	//请求已经选择的号码
+	gameInfo.Blank = collection.Collect(gameInfo.Blank).Reject(func(item, value interface{}) bool {
+		return value.(decimal.Decimal).IntPart() == int64(number)
+	}).ToIntArray()
+
+	//修改房间信息
+	room.GameInfo = gameInfo
+	room.RoomId3Room(room)
+
+	//通知前端修改
+	for _, accUser := range room.UserList {
+		(*accUser.Agent).WriteMsg(&msg.S2C_TictactoePlay{
+			Uid : user.Uid,
+			Number: number,
+			CurrentUid: gameInfo.CurrentUid,
+		})
+	}
+
+	//判断胜负
+	if result,winUid, winCombine := m.checkVictory(user.Uid, gameInfo); result {
+		m.endGame(winUid,winCombine, room)
+	}
+
 
 }
 
-func (t *Tictactoe) CancelMatch(user *models.User, protocol interface{})  {
-	delete(lMatch, user.Uid)
-	(*user.Agent).WriteMsg(&msg.S2C_MatchPlayer{})
+func (m *Mode) checkVictory(uid int, gameInfo Mode) (bool, int, []int)  {
+
+	playerInfo := gameInfo.Info[uid]
+
+	combineList := [...][]int{
+		{1,2,3}, {4,5,6}, {7,8,9},
+		{1,4,7}, {2,5,8}, {3,6,9},
+		{1,5,9}, {3,5,7},
+	}
+
+	for _, combine := range combineList {
+		result := collection.Collect(combine).Every(func(item, value interface{}) bool {
+			value = int(value.(decimal.Decimal).IntPart())
+			return collection.Collect(playerInfo.List).Contains(value)
+		})
+
+		if result {
+			return true, uid, combine
+		}
+	}
+
+	if len(gameInfo.Blank) == 0 {
+		return true, 0, []int{}
+	}
+
+	return false, 0, []int{}
+
 }
 
-func (t *Tictactoe) StartGame(room *models.Room)  {
+func (m *Mode) endGame(winUid int, winCombine []int, room *models.Room)  {
 
+	end := map[string]interface{}{
+		"winUid" : winUid,
+		"winCombine" : winCombine,
+	}
+
+	for _, user := range room.UserList {
+		(*user.Agent).WriteMsg(&msg.S2C_EndGame{
+			WinUid: winUid,
+			End: end,
+		})
+	}
+	room.StopRoom()
 }
 
-func (t *Tictactoe) handlerMoraPlaying(args []interface{}) {
-
-}
-
-func (t *Tictactoe) endGame(room *models.Room)  {
-
-}
