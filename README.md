@@ -14,9 +14,11 @@
 ```
 mv bin/conf/server.json.example bin/conf/server.json
 ```
-1. **创建数据库**
+
+2. **创建数据库**
 	mysql表放在 bin/db.sql
-1. **修改server.json**
+
+3. **修改server.json**
 ```
 	{
 		"LogLevel": "debug" //日志等级,
@@ -34,14 +36,17 @@ mv bin/conf/server.json.example bin/conf/server.json
 		}
 	}
 ```
-1. **执行以下命令生成server二进制文件**
+
+4. **执行
+以下命令生成server二进制文件**
 ```
 go get -v 
 go build server
 ```
-1. **运行bin目录下的server**
+
+5. **运行bin目录下的server**
 ```
-	./server
+./server
 ```
 
 
