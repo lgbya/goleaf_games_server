@@ -41,7 +41,7 @@ mv bin/conf/server.json.example bin/conf/server.json
 以下命令生成server二进制文件**
 ```
 go get -v 
-go build server
+go install server
 ```
 
 5. **运行bin目录下的server**

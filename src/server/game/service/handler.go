@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"server/game/internal"
 	"server/game/service/common"
+	"server/gamedata"
 	"server/lib/tool/error2"
 	"server/models"
 	"server/msg"
@@ -45,6 +46,11 @@ func handleMatchPlayer(args []interface{}) {
 		return
 	}
 
+	matchPlayerNum := gamedata.GetMatchNum(gameId)
+	if matchPlayerNum < 2{
+		error2.Msg(agent,  "游戏配置错误！")
+	}
+
 	user.Status = models.GameMath
 	user.GameId = gameId
 	user.Uid3User(user)
@@ -56,8 +62,10 @@ func handleMatchPlayer(args []interface{}) {
 
 	//返回消息告诉前端已经加入匹配等待中
 	(*user.Agent).WriteMsg(&msg.S2C_MatchPlayer{ GameId : gameId })
-	//如果人数大于二人
-	if match.Num >= 2 {
+
+
+
+	if match.Num >= matchPlayerNum {
 		userList := make(map[int]*models.User)
 		roomId := new(models.Room).GetUniqueID()
 		modUser := new(models.User)
@@ -66,7 +74,7 @@ func handleMatchPlayer(args []interface{}) {
 				userList[uid.(int)] = user
 			}
 
-			if len(userList) == 2 {
+			if len(userList) == matchPlayerNum {
 				for uid := range userList{
 					match.GameId4UidMap(match.GameId, uid)
 				}
