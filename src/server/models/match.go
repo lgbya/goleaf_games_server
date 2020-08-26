@@ -3,13 +3,12 @@ package models
 import (
 	"server/lib/cache"
 	"sync"
+	"sync/atomic"
 )
-
-var matchLock sync.RWMutex
 
 type Match struct {
 	GameId int
-	Num int
+	Num int64
 	List sync.Map
 }
 
@@ -27,10 +26,8 @@ func (m *Match) GameId2UidMap(gameId int) (*Match, bool) {
 func (m *Match) GameId3UidMap(gameId int,  uid int) *Match {
 	match, _ := m.GameId2UidMap(gameId)
 	match.List.LoadOrStore(uid, uid)
-	matchLock.Lock()
 	match.GameId = gameId
-	match.Num++
-	matchLock.Unlock()
+	atomic.AddInt64(&match.Num, 1)
 	cache.New().SetNoExpiration(m.ckGameId2UidMap(gameId), match)
 	return match
 }
@@ -38,9 +35,7 @@ func (m *Match) GameId3UidMap(gameId int,  uid int) *Match {
 func (m *Match) GameId4UidMap(gameId int,  uid int ){
 	match, _ := m.GameId2UidMap(gameId)
 	match.List.Delete(uid)
-	matchLock.Lock()
 	match.GameId = gameId
-	match.Num++
-	matchLock.Unlock()
+	atomic.AddInt64(&match.Num, 1)
 	cache.New().SetNoExpiration(m.ckGameId2UidMap(gameId), match)
 }

@@ -2,11 +2,10 @@ package models
 
 import (
 	"server/lib/cache"
-	"sync"
+	"sync/atomic"
 )
 
-var roomId = 100000
-var roomLock sync.RWMutex
+var roomId int64 = 100000
 
 type Room struct {
 	ID       int
@@ -16,10 +15,8 @@ type Room struct {
 }
 
 func (r *Room) GetUniqueID()  int {
-	roomLock.Lock()
-	roomId++
-	roomLock.Unlock()
-	return roomId
+	atomic.AddInt64(&roomId, 1)
+	return int(roomId)
 }
 
 func (r *Room) ckRoomId2Room(roomId int) string {

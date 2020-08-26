@@ -65,7 +65,7 @@ func handleMatchPlayer(args []interface{}) {
 
 
 
-	if match.Num >= matchPlayerNum {
+	if int(match.Num) >= matchPlayerNum {
 		userList := make(map[int]*models.User)
 		roomId := new(models.Room).GetUniqueID()
 		modUser := new(models.User)
