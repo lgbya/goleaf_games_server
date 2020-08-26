@@ -25,6 +25,7 @@ func handleMatchPlayer(args []interface{}) {
 	//获取基本信息
 	protocol := args[0].(*msg.C2S_MatchPlayer)
 	agent := args[1].(gate.Agent)
+	gameId := protocol.GameId
 
 	//修改角色缓存信息在游戏中
 	user, ok := common.CheckLogin(agent)
@@ -38,22 +39,51 @@ func handleMatchPlayer(args []interface{}) {
 		return
 	}
 	
-	service, ok := NewGameService(protocol.GameId)
+	_, ok = NewGameService(gameId)
 	if !ok  {
 		error2.Msg(agent,  "游戏不存在！")
 		return
 	}
+
 	user.Status = models.GameMath
-	user.GameId = protocol.GameId
+	user.GameId = gameId
 	user.Uid3User(user)
 
-	service.MatchPlayer(user, protocol)
+
+	//将当前角色uid加入对应的游戏匹配列表
+	match := new(models.Match)
+	match = match.GameId3UidMap(gameId, user.Uid)
+
+	//返回消息告诉前端已经加入匹配等待中
+	(*user.Agent).WriteMsg(&msg.S2C_MatchPlayer{ GameId : gameId })
+	//如果人数大于二人
+	if match.Num >= 2 {
+		userList := make(map[int]*models.User)
+		roomId := new(models.Room).GetUniqueID()
+		modUser := new(models.User)
+		match.List.Range(func(uid, value interface{}) bool {
+			if user, found	 := modUser.Uid2User(uid.(int)); found{
+				userList[uid.(int)] = user
+			}
+
+			if len(userList) == 2 {
+				for uid := range userList{
+					match.GameId4UidMap(match.GameId, uid)
+				}
+				internal.ChanRPC.Go("StartGame", roomId, match.GameId, userList)
+				return false
+			}
+			return true
+		})
+
+	}
+
+
 
 }
 
 func handleCancelMatch(args []interface{})  {
 	//获取基本信息
-	protocol := args[0].(*msg.C2S_CancelMatch)
 	agent := args[1].(gate.Agent)
 
 	//修改角色缓存信息在游戏中
@@ -69,13 +99,8 @@ func handleCancelMatch(args []interface{})  {
 		return
 	}
 
-	service, ok := NewGameService(user.GameId)
-	if !ok  {
-		error2.Msg(agent,  "游戏不存在！")
-		return
-	}
 	user.Status = models.GameFree
 	user.GameId = 0
 	user.Uid3User(user)
-	service.CancelMatch(user, protocol)
+	new(models.Match).GameId4UidMap(user.GameId, user.Uid)
 }

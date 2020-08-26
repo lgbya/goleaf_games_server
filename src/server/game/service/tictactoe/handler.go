@@ -3,7 +3,6 @@ package tictactoe
 import (
 	"github.com/chenhg5/collection"
 	"github.com/name5566/leaf/gate"
-	"github.com/name5566/leaf/log"
 	"github.com/shopspring/decimal"
 	"reflect"
 	"server/game/internal"
@@ -13,7 +12,6 @@ import (
 	"server/msg"
 )
 
-var matchList = make(map[int]int)
 
 type Mode struct {
 	Info       map[int]player `json:"info"`
@@ -35,45 +33,9 @@ func handler(m interface{}, h interface{})  {
 	internal.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
 }
 
-func (m *Mode) MatchPlayer(user *models.User, args ...interface{})  {
-	gameId := args[0].(*msg.C2S_MatchPlayer).GameId
-
-	//将当前角色uid加入对应的游戏匹配列表
-	matchList[user.Uid] = user.Uid
-
-	//返回消息告诉前端已经加入匹配等待中
-	(*user.Agent).WriteMsg(&msg.S2C_MatchPlayer{ GameId : gameId })
-
-	//如果人数大于二人
-	if len(matchList) >= 2 {
-		userList := make(map[int]*models.User)
-		roomId := new(models.Room).GetUniqueID()
-		modUser := new(models.User)
-		for _, uid := range matchList {
-			if user, found	 := modUser.Uid2User(uid); found{
-				delete(matchList, user.Uid)
-				userList[uid] = user
-			}
-
-			if len(userList) == 2 {
-				log.Debug("============Start==========")
-				mode := Mode{Info: map[int]player{}, Blank:[]int{1,2,3,4,5,6,7,8,9}}
-				internal.ChanRPC.Go("StartGame", roomId, gameId, userList, mode)
-				break
-			}
-		}
-
-	}
-}
-
-func (m *Mode) CancelMatch(user *models.User, args ...interface{})  {
-	delete(matchList, user.Uid)
-	(*user.Agent).WriteMsg(&msg.S2C_CancelMatch{})
-}
-
-func (m *Mode) StartGame(room *models.Room, args ...interface{}) map[string]interface{} {
+func (m *Mode) Start(room *models.Room, args ...interface{}) (map[string]interface{}, *models.Room){
 	//为玩家分配对号和叉号
-	gameInfo := room.GameInfo.(Mode)
+	gameInfo := Mode{Info: map[int]player{}, Blank:[]int{1,2,3,4,5,6,7,8,9}}
 	icon := 0
 	userIcon := make(map[int]int)
 	for uid := range room.UserList {
@@ -86,15 +48,14 @@ func (m *Mode) StartGame(room *models.Room, args ...interface{}) map[string]inte
 		gameInfo.CurrentUid = uid
 	}
 	room.GameInfo = gameInfo
-	room.RoomId3Room(room)
-
-	return map[string]interface{}{
+	startInfo := map[string]interface{}{
 		"currentUid" : gameInfo.CurrentUid,
 		"userIcon" : userIcon,
 	}
+	return startInfo, room
 }
 
-func (m *Mode) ContinueGame(user *models.User, room *models.Room, args ...interface{}) map[string]interface{} {
+func (m *Mode) Continue(user *models.User, room *models.Room, args ...interface{}) map[string]interface{} {
 	continueInfo := make(map[string]interface{})
 	gameInfo := room.GameInfo.(Mode)
 	continueInfo["mode"] = gameInfo

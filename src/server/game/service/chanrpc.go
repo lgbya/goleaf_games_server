@@ -32,9 +32,7 @@ func rpcCloseAgent(args []interface{}) {
 			user.DeleteCache(user.Uid)
 
 		case models.GameMath:
-			if service, ok := NewGameService(user.GameId);ok  {
-				service.CancelMatch(user, &msg.S2C_CancelMatch{})
-			}
+			new(models.Match).GameId4UidMap(user.GameId, user.Uid)
 			user.DeleteCache(user.Uid)
 		}
 
@@ -49,27 +47,18 @@ func rpcStartGame(args []interface{}) {
 	roomId := args[0].(int)
 	gameId := args[1].(int)
 	userList := args[2].(map[int]*models.User)
-	gameInfo := args[3]
+	service, _ := NewGameService(gameId)
 
 	//修改房间信息
 	room := &models.Room{
 		GameId:gameId, ID:roomId,
-		UserList: userList, GameInfo: gameInfo,
+		UserList: userList,
 	}
-	new(models.Room).RoomId3Room(room)
-	service, ok := NewGameService(gameId)
-	if !ok  {
-		for _, user := range userList {
-			user.InRoomId = 0
-			user.Status = models.GameFree
-			user.GameId = 0
-			user.Uid3User(user)
-			error2.Msg(*(user.Agent),  "游戏不存在！")
-		}
-		return
-	}
+
 	//不同游戏的开始钩子
-	startInfo := service.StartGame(room)
+	startInfo, room := service.Start(room)
+	new(models.Room).RoomId3Room(room)
+
 	fmt.Println(startInfo)
 	//通知房间内的所有玩家
 	mUserList := common.User2MUserList(userList)
@@ -112,7 +101,7 @@ func rpcContinueGame(args []interface{})  {
 	}
 
 	//不同游戏的开始继续游戏
-	continueInfo := service.ContinueGame(user, room)
+	continueInfo := service.Continue(user, room)
 
 	//通知重新进入游戏的玩家
 	(*user.Agent).WriteMsg(&msg.S2C_ContinueGame{

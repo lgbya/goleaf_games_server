@@ -2,7 +2,6 @@ package mora
 
 import (
 	"github.com/name5566/leaf/gate"
-	"github.com/name5566/leaf/log"
 	"math"
 	"reflect"
 	"server/game/internal"
@@ -11,10 +10,6 @@ import (
 	"server/models"
 	"server/msg"
 )
-
-
-
-var matchList = make(map[int]int)
 
 type Mode struct {
 	Info map[int]int
@@ -29,47 +24,12 @@ func handler(m interface{}, h interface{})  {
 	internal.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
 }
 
-func (m *Mode) MatchPlayer(user *models.User, args ...interface{})  {
-	gameId := args[0].(*msg.C2S_MatchPlayer).GameId
-
-	//将当前角色uid加入对应的游戏匹配列表
-	matchList[user.Uid] = user.Uid
-
-	//返回消息告诉前端已经加入匹配等待中
-	(*user.Agent).WriteMsg(&msg.S2C_MatchPlayer{ GameId : gameId })
-
-	//如果人数大于二人
-	if len(matchList) >= 2 {
-		userList := make(map[int]*models.User)
-		roomId := new(models.Room).GetUniqueID()
-		modUser := new(models.User)
-		for _, uid := range matchList {
-			if user, found	 := modUser.Uid2User(uid); found{
-				delete(matchList, user.Uid)
-				userList[uid] = user
-			}
-
-			if len(userList) == 2 {
-				log.Debug("============Start==========")
-				more := Mode{Info: map[int]int{}}
-				internal.ChanRPC.Go("StartGame", roomId, gameId, userList, more)
-				break
-			}
-		}
-
-	}
+func (m *Mode) Start(room *models.Room, args ...interface{}) (map[string]interface{}, *models.Room) {
+	room.GameInfo = Mode{Info: map[int]int{}}
+	return make(map[string]interface{}), room
 }
 
-func (m *Mode) CancelMatch(user *models.User, args ...interface{})  {
-	delete(matchList, user.Uid)
-	(*user.Agent).WriteMsg(&msg.S2C_CancelMatch{})
-}
-
-func (m *Mode) StartGame(room *models.Room, args ...interface{}) map[string]interface{} {
-	return make(map[string]interface{})
-}
-
-func (m *Mode) ContinueGame(user *models.User, room *models.Room, args ...interface{}) map[string]interface{} {
+func (m *Mode) Continue(user *models.User, room *models.Room, args ...interface{}) map[string]interface{} {
 	continueInfo := make(map[string]interface{})
 	userGameInfo := room.GameInfo.(Mode).Info[user.Uid]
 	continueInfo["ply"] = userGameInfo
