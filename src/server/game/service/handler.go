@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"server/game/internal"
 	"server/game/service/common"
+	"server/game/service/play"
 	"server/gamedata"
 	"server/lib/tool/error2"
 	"server/models"
@@ -16,10 +17,33 @@ import (
 func init() {
 	handler(&msg.C2S_MatchPlayer{}, handleMatchPlayer)
 	handler(&msg.C2S_CancelMatch{}, handleCancelMatch)
+
+	handler(&msg.C2S_TictactoePlay{}, handlePlay)
+	handler(&msg.C2S_MoraPlay{}, handlePlay)
+
 }
 
 func handler(m interface{}, h interface{})  {
 	internal.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
+}
+
+func handlePlay(args []interface{})  {
+	internal.GetSkeleton().Go(func() {
+
+		//获取基本信息
+		message := args[0]
+		agent := args[1].(gate.Agent)
+
+		//修改角色缓存信息在游戏中
+		user, room := common.CheckInRoom(agent)
+		if user == nil || room == nil{
+			error2.FatalMsg(agent, error2.LoginInAgain, "未加入游戏！")
+			return
+		}
+		ch := room.CallCh
+		ch<-models.Call{Uid:user.Uid, Agent:agent, Msg:message}
+
+	},nil)
 }
 
 func handleMatchPlayer(args []interface{}) {
@@ -39,9 +63,8 @@ func handleMatchPlayer(args []interface{}) {
 		error2.Msg(agent, "已经匹配或游戏中！")
 		return
 	}
-	
-	_, ok = NewGameService(gameId)
-	if !ok  {
+
+	if _, ok = play.New(gameId);!ok  {
 		error2.Msg(agent,  "游戏不存在！")
 		return
 	}
@@ -85,8 +108,6 @@ func handleMatchPlayer(args []interface{}) {
 		})
 
 	}
-
-
 
 }
 

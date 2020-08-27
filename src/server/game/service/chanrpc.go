@@ -6,6 +6,7 @@ import (
 	"github.com/name5566/leaf/log"
 	"server/game/internal"
 	"server/game/service/common"
+	"server/game/service/play"
 	"server/lib/tool/error2"
 	"server/models"
 	"server/msg"
@@ -44,37 +45,56 @@ func rpcCloseAgent(args []interface{}) {
 }
 
 func rpcStartGame(args []interface{}) {
-	roomId := args[0].(int)
-	gameId := args[1].(int)
-	userList := args[2].(map[int]*models.User)
-	service, _ := NewGameService(gameId)
 
-	//修改房间信息
-	room := &models.Room{
-		GameId:gameId, ID:roomId,
-		UserList: userList,
-	}
+	internal.GetSkeleton().Go(func() {
 
-	//不同游戏的开始钩子
-	startInfo, room := service.Start(room)
-	new(models.Room).RoomId3Room(room)
+		roomId := args[0].(int)
+		gameId := args[1].(int)
+		userList := args[2].(map[int]*models.User)
 
-	fmt.Println(startInfo)
-	//通知房间内的所有玩家
-	mUserList := common.User2MUserList(userList)
-	for _, user := range userList {
-		user.InRoomId = roomId
-		user.Status = models.GamePlay
-		user.Uid3User(user)
-		(*user.Agent).WriteMsg(&msg.S2C_StartGame{
-			RoomId :  roomId,
-			GameId: gameId,
-			UserList: mUserList,
-			Start: startInfo,
-		})
-	}
+		callCh := make(chan models.Call, 10)
+		stopCh := make(chan bool,1)
 
-	log.Debug("=======创建房间成功！！！房间号 %v==========", roomId)
+		playMod, _ := play.New(gameId)
+
+		//修改房间信息
+		room := &models.Room{
+			GameId:gameId, ID:roomId,
+			UserList: userList, CallCh: callCh,
+			StopCh:stopCh,
+		}
+
+		//不同游戏的开始钩子
+		startInfo, room := playMod.Start(room)
+		new(models.Room).RoomId3Room(room)
+
+		fmt.Println(startInfo)
+		//通知房间内的所有玩家
+		mUserList := common.User2MUserList(userList)
+		for _, user := range userList {
+			user.InRoomId = roomId
+			user.Status = models.GamePlay
+			user.Uid3User(user)
+			(*user.Agent).WriteMsg(&msg.S2C_StartGame{
+				RoomId :  roomId,
+				GameId: gameId,
+				UserList: mUserList,
+				Start: startInfo,
+			})
+		}
+
+		log.Debug("=======创建房间成功！！！房间号 %v==========", roomId)
+		isStopRoom := false
+		for !isStopRoom {
+			select {
+			case call := <-callCh:
+				playMod.Run(&call)
+			case <-stopCh:
+				log.Debug("========房间解散%v========", roomId)
+				isStopRoom = true
+			}
+		}
+	},nil)
 
 }
 
@@ -94,14 +114,14 @@ func rpcContinueGame(args []interface{})  {
 		return
 	}
 
-	service, ok := NewGameService(user.GameId)
+	playMod, ok := play.New(user.GameId)
 	if !ok  {
 		error2.Msg(*(user.Agent),  "游戏不存在！")
 		return
 	}
 
 	//不同游戏的开始继续游戏
-	continueInfo := service.Continue(user, room)
+	continueInfo := playMod.Continue(user, room)
 
 	//通知重新进入游戏的玩家
 	(*user.Agent).WriteMsg(&msg.S2C_ContinueGame{

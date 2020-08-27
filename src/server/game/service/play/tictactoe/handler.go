@@ -2,10 +2,7 @@ package tictactoe
 
 import (
 	"github.com/chenhg5/collection"
-	"github.com/name5566/leaf/gate"
 	"github.com/shopspring/decimal"
-	"reflect"
-	"server/game/internal"
 	"server/game/service/common"
 	"server/lib/tool/error2"
 	"server/models"
@@ -24,13 +21,13 @@ type player struct {
 	List []int `json:"list"`
 }
 
-func init() {
-	mode := new(Mode)
-	handler(&msg.C2S_TictactoePlay{}, mode.handlePlay)
-}
 
-func handler(m interface{}, h interface{})  {
-	internal.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
+func (m *Mode) Run(call *models.Call) {
+	switch call.Msg.(type)  {
+	case *msg.C2S_TictactoePlay:
+		m.handlePlay(call)
+	}
+
 }
 
 func (m *Mode) Start(room *models.Room, args ...interface{}) (map[string]interface{}, *models.Room){
@@ -62,18 +59,14 @@ func (m *Mode) Continue(user *models.User, room *models.Room, args ...interface{
 	return continueInfo
 }
 
-func (m *Mode) handlePlay(args []interface{}) {
+func (m *Mode) handlePlay(call *models.Call) {
 
 	//获取基本信息
-	message := args[0].(*msg.C2S_TictactoePlay)
-	agent := args[1].(gate.Agent)
+	message := call.Msg.(*msg.C2S_TictactoePlay)
+	agent := call.Agent
 
 	//修改角色缓存信息在游戏中
 	user, room := common.CheckInRoom(agent)
-	if user == nil || room == nil{
-		error2.FatalMsg(agent, error2.LoginInAgain, "未加入游戏！")
-		return
-	}
 
 	number := message.Number
 	gameInfo := room.GameInfo.(Mode)

@@ -7,7 +7,6 @@ import (
 	"server/game"
 	"server/gate"
 	"server/login"
-	_"server/gamedata"
 )
 
 func main() {

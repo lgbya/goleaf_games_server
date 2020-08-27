@@ -1,10 +1,8 @@
 package mora
 
 import (
-	"github.com/name5566/leaf/gate"
+	"github.com/name5566/leaf/log"
 	"math"
-	"reflect"
-	"server/game/internal"
 	"server/game/service/common"
 	"server/lib/tool/error2"
 	"server/models"
@@ -15,15 +13,14 @@ type Mode struct {
 	Info map[int]int
 }
 
-func init() {
-	mode := new(Mode)
-	handler(&msg.C2S_MoraPlay{}, mode.handlePlay)
-}
 
-func handler(m interface{}, h interface{})  {
-	internal.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
-}
+func (m *Mode) Run(call *models.Call) {
+	switch call.Msg.(type)  {
+	case *msg.C2S_MoraPlay:
+		m.handlePlay(call)
+	}
 
+}
 func (m *Mode) Start(room *models.Room, args ...interface{}) (map[string]interface{}, *models.Room) {
 	room.GameInfo = Mode{Info: map[int]int{}}
 	return make(map[string]interface{}), room
@@ -36,47 +33,33 @@ func (m *Mode) Continue(user *models.User, room *models.Room, args ...interface{
 	return continueInfo
 }
 
-func (m *Mode) handlePlay(args []interface{}) {
-	internal.GetSkeleton().Go(func() {
+func (m *Mode) handlePlay(call *models.Call){
 
+	//获取基本信息
+	message := call.Msg.(*msg.C2S_MoraPlay)
+	agent := call.Agent
+	if !(message.Ply == 1 || message.Ply == 2 || message.Ply == 3){
+		error2.Msg(agent, "选择错误！")
+		return
+	}
 
-		//获取基本信息
-		message := args[0].(*msg.C2S_MoraPlay)
-		agent := args[1].(gate.Agent)
+	//修改角色缓存信息在游戏中
+	user, room := common.CheckInRoom(agent)
 
-		if !(message.Ply == 1 || message.Ply == 2 || message.Ply == 3){
-			error2.Msg(agent, "选择错误！")
-			return
-		}
+	gameInfo := room.GameInfo.(Mode)
+	gameInfo.Info[user.Uid] = message.Ply
+	room.GameInfo = gameInfo
 
+	room.RoomId3Room(room)
 
-		//修改角色缓存信息在游戏中
-		user, found := common.CheckLogin(agent)
-		if !found {
-			error2.FatalMsg(agent, error2.LoginInAgain,"请登录后再操作！")
-			return
-		}
-
-		room, found := new(models.Room).RoomId2Room(user.InRoomId)
-		if !found {
-			error2.Msg(agent, "未加入游戏！")
-			return
-		}
-		gameInfo := room.GameInfo.(Mode)
-		gameInfo.Info[user.Uid] = message.Ply
-		room.GameInfo = gameInfo
-
-		room.RoomId3Room(room)
-
-		(*user.Agent).WriteMsg(&msg.S2C_MoraPlay{
-			Uid: user.Uid,
-			Ply: message.Ply,
-		})
-		//所有人都出完拳，判断输赢
-		if len(gameInfo.Info) == len(room.UserList) {
-			m.endGame(room)
-		}
-	}, func() {})
+	(*user.Agent).WriteMsg(&msg.S2C_MoraPlay{
+		Uid: user.Uid,
+		Ply: message.Ply,
+	})
+	//所有人都出完拳，判断输赢
+	if len(gameInfo.Info) == len(room.UserList) {
+		m.endGame(room)
+	}
 }
 
 func (m *Mode) endGame(room *models.Room)  {
