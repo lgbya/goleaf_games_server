@@ -1,6 +1,7 @@
 package play
 
 import (
+	"server/define"
 	"server/game/service/play/mora"
 	"server/game/service/play/tictactoe"
 	"server/models"
@@ -17,9 +18,16 @@ type Play interface {
 
 func New(gameId int ) (Play, bool)  {
 	serviceList := map[int]Play{
-		1001 : new(mora.Mode),
-		1002 : new(tictactoe.Mode),
+		define.More:      new(mora.Mode),
+		define.Tictactoe: new(tictactoe.Mode),
 	}
 	service, ok := serviceList[gameId]
 	return service, ok
+}
+
+func AllGameId()[]int{
+	return []int{
+		define.More,
+		define.Tictactoe,
+	}
 }

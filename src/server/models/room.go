@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/name5566/leaf/gate"
+	"server/define"
 	"server/lib/cache"
 	"sync"
 	"sync/atomic"
@@ -67,7 +68,7 @@ func (r *Room) StopRoom()  {
 		user, found := user.Uid2User(user.Uid)
 		if found {
 			user.InRoomId = 0
-			user.Status = GameFree
+			user.Status = define.GameFree
 			user.Uid3User(user)
 		}
 	}

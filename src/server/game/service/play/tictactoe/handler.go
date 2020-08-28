@@ -21,13 +21,11 @@ type player struct {
 	List []int `json:"list"`
 }
 
-
 func (m *Mode) Run(call *models.Call) {
 	switch call.Msg.(type)  {
 	case *msg.C2S_TictactoePlay:
 		m.handlePlay(call)
 	}
-
 }
 
 func (m *Mode) Start(room *models.Room, args ...interface{}) (map[string]interface{}, *models.Room){

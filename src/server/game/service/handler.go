@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/name5566/leaf/gate"
 	"reflect"
+	"server/define"
 	"server/game/internal"
 	"server/game/service/common"
 	"server/game/service/play"
@@ -59,7 +60,7 @@ func handleMatchPlayer(args []interface{}) {
 		return
 	}
 
-	if user.Status != models.GameFree {
+	if user.Status != define.GameFree {
 		error2.Msg(agent, "已经匹配或游戏中！")
 		return
 	}
@@ -74,7 +75,7 @@ func handleMatchPlayer(args []interface{}) {
 		error2.Msg(agent,  "游戏配置错误！")
 	}
 
-	user.Status = models.GameMath
+	user.Status = define.GameMath
 	user.GameId = gameId
 	user.Uid3User(user)
 
@@ -85,7 +86,6 @@ func handleMatchPlayer(args []interface{}) {
 
 	//返回消息告诉前端已经加入匹配等待中
 	(*user.Agent).WriteMsg(&msg.S2C_MatchPlayer{ GameId : gameId })
-
 
 
 	if int(match.Num) >= matchPlayerNum {
@@ -123,12 +123,12 @@ func handleCancelMatch(args []interface{})  {
 		return
 	}
 
-	if user.Status != models.GameMath{
+	if user.Status != define.GameMath{
 		error2.Msg(agent, "未匹配游戏")
 		return
 	}
 
-	user.Status = models.GameFree
+	user.Status = define.GameFree
 	user.GameId = 0
 	user.Uid3User(user)
 	new(models.Match).GameId4UidMap(user.GameId, user.Uid)

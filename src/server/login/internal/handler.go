@@ -62,7 +62,7 @@ func handleRegister(args []interface{})   {
 	}
 
 	//注册成功，写入登录数据
-	user = setLoginInfo(user, agent)
+	user = user.SetLoginInfo(user, agent)
 	//返回注册成功消息
 	agent.WriteMsg(&msg.S2C_Register{
 		Uid: user.Uid,
@@ -101,7 +101,7 @@ func handleLogin(args []interface{})  {
 		user = oldUser
 	}
 
-	user = setLoginInfo(user, agent)
+	user = user.SetLoginInfo(user, agent)
 	agent.WriteMsg(&msg.S2C_Login{
 		Uid: user.Uid,
 		Name: user.Name,
@@ -139,7 +139,7 @@ func handleResetLogin(args []interface{}) {
 		return
 	}
 
-	user = setLoginInfo(user, agent)
+	user = user.SetLoginInfo(user, agent)
 	agent.WriteMsg(&msg.S2C_ResetLogin{
 		Uid: user.Uid,
 		Name: user.Name,
@@ -150,14 +150,4 @@ func handleResetLogin(args []interface{}) {
 
 	game.ChanRPC.Go("ContinueGame", user)
 
-}
-
-//写入登录数据
-func setLoginInfo(user *models.User, agent gate.Agent)*models.User{
-	user.GenerateToken()
-	user.Agent = &agent
-	agent.SetUserData(&models.Agent{ID:user.Uid, HeartTime : time.Now().Unix()})
-	user.Uid3User(user)
-	user.Common3LoginUid(user.Uid, &agent)
-	return user
 }

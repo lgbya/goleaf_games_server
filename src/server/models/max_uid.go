@@ -7,7 +7,7 @@ import (
 )
 
 const CkCommon2MaxUid = "key:common|data:max_uid"
-const InitialUid = 100000
+const InitialUid = 10000000
 
 type MaxUid struct {
 	ID 		int		`gorm:"primary_key"`

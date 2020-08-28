@@ -1,9 +1,9 @@
 package service
 
 import (
-	"fmt"
 	"github.com/name5566/leaf/gate"
 	"github.com/name5566/leaf/log"
+	"server/define"
 	"server/game/internal"
 	"server/game/service/common"
 	"server/game/service/play"
@@ -29,10 +29,10 @@ func rpcCloseAgent(args []interface{}) {
 	agent := args[0].(gate.Agent)
 	if user, ok := common.CheckLogin(agent); ok{
 		switch user.Status {
-		case models.GameFree :
+		case define.GameFree :
 			user.DeleteCache(user.Uid)
 
-		case models.GameMath:
+		case define.GameMath:
 			new(models.Match).GameId4UidMap(user.GameId, user.Uid)
 			user.DeleteCache(user.Uid)
 		}
@@ -68,12 +68,11 @@ func rpcStartGame(args []interface{}) {
 		startInfo, room := playMod.Start(room)
 		new(models.Room).RoomId3Room(room)
 
-		fmt.Println(startInfo)
 		//通知房间内的所有玩家
 		mUserList := common.User2MUserList(userList)
 		for _, user := range userList {
 			user.InRoomId = roomId
-			user.Status = models.GamePlay
+			user.Status = define.GamePlay
 			user.Uid3User(user)
 			(*user.Agent).WriteMsg(&msg.S2C_StartGame{
 				RoomId :  roomId,
@@ -100,7 +99,7 @@ func rpcStartGame(args []interface{}) {
 
 func rpcContinueGame(args []interface{})  {
 	user := args[0].(*models.User)
-	if user.Status == models.GameFree {
+	if user.Status == define.GameFree {
 		return
 	}
 
@@ -108,7 +107,7 @@ func rpcContinueGame(args []interface{})  {
 	if  !ok {
 		user.InRoomId = 0
 		user.GameId = 0
-		user.GameId = models.GameFree
+		user.GameId = define.GameFree
 		user.Uid3User(user)
 		error2.Msg(*(user.Agent),  "游戏已经结束！")
 		return

@@ -21,4 +21,8 @@ var (
 	TimerDispatcherLen = 10000
 	AsynCallLen        = 10000
 	ChanRPCLen         = 10000
+
+	//robot conf
+	RobotNum 		   = 10
+	AiMatchTime 	   = 15 * time.Second
 )

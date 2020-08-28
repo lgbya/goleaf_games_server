@@ -10,12 +10,6 @@ import (
 	"time"
 )
 
-const (
-	GameFree = 0
-	GameMath = 1
-	GamePlay = 2
-)
-
 type User struct {
 	ID        int    //id
 	Uid       int    //角色id
@@ -25,6 +19,7 @@ type User struct {
 	Token     string //token
 	ExpiresAt int64  //token过期信息
 	CreatedAt int64  //创建时间
+	IsRobot bool `sql:"-"`
 	Agent 	  *gate.Agent `sql:"-"`
 	Game      `sql:"-"`
 }
@@ -77,10 +72,13 @@ func (u *User) Create(loginName string, loginPassword string) (*User, error) {
 }
 
 
+
 //删除缓存并修改数据库
 func (u *User) DeleteCache(uid int)  {
 	user := u.uid4User(uid)
-	db.New().Save(user)
+	if user.IsRobot == false{
+		db.New().Save(user)
+	}
 }
 
 //用户uid对应的用户信息
@@ -175,4 +173,14 @@ func (u *User) AuthLoginPassword(loginPassword string) bool {
 
 func(u *User)  getSignPassword(password string) string{
 	return tool.Md5(password + conf.Server.Md5Key)
+}
+
+//写入登录数据
+func (u *User) SetLoginInfo(user *User, agent gate.Agent) *User{
+	user.GenerateToken()
+	user.Agent = &agent
+	agent.SetUserData(&Agent{ID:user.Uid, HeartTime : time.Now().Unix()})
+	user.Uid3User(user)
+	user.Common3LoginUid(user.Uid, &agent)
+	return user
 }
