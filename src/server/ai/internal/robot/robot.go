@@ -1,6 +1,7 @@
 package robot
 
 import (
+	"math/rand"
 	"reflect"
 	"server/conf"
 	"server/models"
@@ -33,6 +34,14 @@ func (r *Robot) GetUniqueId() int  {
 	return uniqueId
 }
 
+func (r *Robot) RandomName() string {
+	list :=[]string{
+		"非凡哥", "鸡太美", "你好骚啊！", "小母牛飞上天", "跟非凡哥一桌",
+		"撇嘴龙王", "一拳唐僧", "Dio", "JOJO", "坏老头", "今晚吃鸡",
+	}
+	return  list[rand.Intn(len(list)-1)]
+}
+
 func (r *Robot) Create() *Robot {
 	robot := new(Robot)
 	callCh := make(chan interface{}, 10)
@@ -44,7 +53,7 @@ func (r *Robot) Create() *Robot {
 
 	robot.User = &models.User{
 		Uid : r.GetUniqueId(),
-		Name: "robot",
+		Name: r.RandomName(),
 		IsRobot:true,
 	}
 	robot.MatchTicker = time.NewTicker(conf.AiMatchTime)
@@ -54,7 +63,6 @@ func (r *Robot) Create() *Robot {
 	robot.User = robot.SetLoginInfo(robot.User, agent)
 	robotList.LoadOrStore(robot.Uid, robot.CloseCh)
 	return robot
-	//r.Start()
 }
 
 func (r *Robot) Close()  {
