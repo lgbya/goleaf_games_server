@@ -54,9 +54,15 @@ func (j *Job)Play(message interface{}, r *robot.Robot)  {
 
 func (j *Job) send (robotUid int, currentUid int, surplusList []int, agent gate.Agent ) []int {
 	if robotUid == currentUid {
-		key := rand.Intn(len(surplusList)-1)
-		number := surplusList[key]
-		surplusList = append(surplusList[:key],surplusList[key+1:]...)
+		number := 0
+		if len(surplusList) == 1 {
+			number = surplusList[0]
+			surplusList = []int{}
+		}else{
+			key := rand.Intn(len(surplusList)-1)
+			number = surplusList[key]
+			surplusList = append(surplusList[:key],surplusList[key+1:]...)
+		}
 		send := &msg.C2S_TictactoePlay{Number:number}
 		go func() {
 			<-time.After(3 * time.Second)
