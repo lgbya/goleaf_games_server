@@ -1,0 +1,38 @@
+{
+	"WSAddr": "192.168.2.201:3563",
+	"MaxConnNum": 20000,
+	"Md5Key" : "gjwagawrfhwealu3131",
+	"Log":{
+		"Level" : "debug",
+		"Path"  : ""
+	},
+	"Skeleton" : {
+		"GoLen" :           10000 ,
+		"TimerDispatcherLen": 10000,
+		"AsynCallLen"	:     10000,
+		"ChanRPCLen"  	:	10000
+	},
+	"Gate": {
+		"PendingWriteNum":  2000,
+		"MaxMsgLen"     :   4096,
+		"HTTPTimeout"   :   10,
+		"LenMsgLen"     :  	2,
+		"LittleEndian"  :  	false
+	},
+	"DB" : {
+		"Username" : "root",
+		"Password" : "root",
+		"Host" : "127.0.0.1",
+		"Database": "puzzle_games",
+		"MaxIdle": 15,
+		"MaxOpen": 10
+	},
+	"Robot" : {
+		"Num" 		: 10,
+		"MatchTime" : 3
+	},
+	"Cache": {
+		"DefaultExpiration": 5,
+		"CleanupInterval":  10
+	}
+}

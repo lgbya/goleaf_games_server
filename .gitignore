@@ -1,3 +1,5 @@
 /bin/server
 /src/github.com
 /bin/conf/server.json
+/.idea
+/server

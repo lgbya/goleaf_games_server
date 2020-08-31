@@ -12,11 +12,11 @@
 
 1. **创建配置文件**
 ```
-mv bin/conf/server.json.example bin/conf/server.json
+mv configs/server.json.example configs/server.json
 ```
 
 2. **创建数据库**
-	mysql表放在 bin/db.sql
+	mysql表放在 configs/db.sql
 
 3. **修改server.json**
 ```
@@ -26,7 +26,7 @@ mv bin/conf/server.json.example bin/conf/server.json
 		"WSAddr": "xxx.xxx.xxx.xxx:xxx"//websocket 如127.0.0.1:3666,
 		"MaxConnNum": 20000,
 		"Md5Key" : "gjwagawrfhwealu3131", //token和用户密码加密key
-		"SqlSrv" : {
+		"DB" : {
 			"Username" : "root",    //mysql 用户名
 			"Password" : "root",    //mysql 密码
 			"Host" : "127.0.0.1",   //mysql 连接地址
@@ -37,17 +37,16 @@ mv bin/conf/server.json.example bin/conf/server.json
 	}
 ```
 
-4. **执行
-以下命令生成server二进制文件**
+4. **命令**
 ```
-go get -v 
-go install server
+make build //编译文件
+make start //启动项目
+make rebuild //启动+编译 
+
+go build -v -o server cmd/main.go //编译文件
+./server 启动项目
 ```
 
-5. **运行bin目录下的server**
-```
-./server
-```
 
 
 
