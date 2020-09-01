@@ -1,11 +1,10 @@
-package service
+package module
 
 import (
 	"server/internal/common/define"
 	"server/internal/common/err-code"
 	"server/internal/common/helper/game-helper"
-	"server/internal/game/module"
-	"server/internal/game/service/play"
+	"server/internal/game/service"
 	"server/internal/model"
 	"server/internal/protocol"
 
@@ -16,10 +15,10 @@ import (
 )
 
 func init() {
-	module.GetSkeleton().RegisterChanRPC("NewAgent", rpcNewAgent)
-	module.GetSkeleton().RegisterChanRPC("CloseAgent", rpcCloseAgent)
-	module.GetSkeleton().RegisterChanRPC("StartGame", rpcStartGame)
-	module.GetSkeleton().RegisterChanRPC("ContinueGame", rpcContinueGame)
+	GetSkeleton().RegisterChanRPC("NewAgent", rpcNewAgent)
+	GetSkeleton().RegisterChanRPC("CloseAgent", rpcCloseAgent)
+	GetSkeleton().RegisterChanRPC("StartGame", rpcStartGame)
+	GetSkeleton().RegisterChanRPC("ContinueGame", rpcContinueGame)
 }
 
 func rpcNewAgent(args []interface{}) {
@@ -48,7 +47,7 @@ func rpcCloseAgent(args []interface{}) {
 
 func rpcStartGame(args []interface{}) {
 
-	module.GetSkeleton().Go(func() {
+	GetSkeleton().Go(func() {
 
 		roomId := args[0].(int)
 		gameId := args[1].(int)
@@ -57,7 +56,7 @@ func rpcStartGame(args []interface{}) {
 		callCh := make(chan model.Call, 10)
 		stopCh := make(chan bool, 1)
 
-		playMod, _ := play.New(gameId)
+		playMod, _ := service.NewPlay(gameId)
 
 		//修改房间信息
 		room := &model.Room{
@@ -100,13 +99,13 @@ func rpcStartGame(args []interface{}) {
 }
 
 func rpcContinueGame(args []interface{}) {
-	user := args[0].(*model.User)
-	if user.Game.Status == define.GameFree {
+	user,ok := args[0].(*model.User)
+	if !ok || user.Game.Status == define.GameFree {
 		return
 	}
 
-	room, ok := new(model.Room).RoomId2Room(user.Game.InRoomId)
-	if !ok {
+	room := &model.Room{}
+	if room, ok = room.RoomId2Room(user.Game.InRoomId);!ok {
 		user.Game.InRoomId = 0
 		user.Game.Id = 0
 		user.Game.Status = define.GameFree
@@ -115,14 +114,14 @@ func rpcContinueGame(args []interface{}) {
 		return
 	}
 
-	playMod, ok := play.New(user.Game.Id)
+	playService, ok := service.NewPlay(user.Game.Id)
 	if !ok {
 		errCode.Msg(*(user.Agent), "游戏不存在！")
 		return
 	}
 
 	//不同游戏的开始继续游戏
-	continueInfo := playMod.Continue(user, room)
+	continueInfo := playService.Continue(user, room)
 
 	//通知重新进入游戏的玩家
 	(*user.Agent).WriteMsg(&protocol.S2C_ContinueGame{

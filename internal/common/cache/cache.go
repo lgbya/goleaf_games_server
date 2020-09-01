@@ -19,7 +19,7 @@ func init() {
 }
 
 func New() *cacheMod {
-	return new(cacheMod)
+	return &cacheMod{}
 }
 
 func (c *cacheMod) Set(key string, value interface{}, time time.Duration) {

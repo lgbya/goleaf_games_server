@@ -2,6 +2,7 @@ package module
 
 import (
 	"github.com/name5566/leaf/gate"
+	"github.com/name5566/leaf/module"
 	"server/internal/common/conf"
 	"server/internal/game"
 	"server/internal/protocol"
@@ -12,6 +13,7 @@ type Module struct {
 	*gate.Gate
 }
 
+var _ module.Module = (*Module)(nil)
 func (m *Module) OnInit() {
 	m.Gate = &gate.Gate{
 		MaxConnNum:      conf.Server.MaxConnNum,

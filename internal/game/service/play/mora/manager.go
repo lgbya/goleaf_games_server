@@ -3,6 +3,7 @@ package mora
 import (
 	"server/internal/common/err-code"
 	"server/internal/common/helper/game-helper"
+	"server/internal/game/service/play"
 	"server/internal/model"
 	"server/internal/protocol"
 
@@ -13,6 +14,7 @@ type Mode struct {
 	Info map[int]int
 }
 
+var _ play.Play = Mode{}
 func (m Mode) Run(call *model.Call) {
 	switch call.Msg.(type) {
 	case *protocol.C2S_MoraPlay:

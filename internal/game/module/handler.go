@@ -1,12 +1,11 @@
-package service
+package module
 
 import (
 	"server/internal/common/define"
 	"server/internal/common/err-code"
 	"server/internal/common/gamedata"
 	"server/internal/common/helper/game-helper"
-	"server/internal/game/module"
-	"server/internal/game/service/play"
+	"server/internal/game/service"
 	"server/internal/model"
 	"server/internal/protocol"
 
@@ -20,17 +19,16 @@ import (
 func init() {
 	handler(&protocol.C2S_MatchPlayer{}, handleMatchPlayer)
 	handler(&protocol.C2S_CancelMatch{}, handleCancelMatch)
-
 	handler(&protocol.C2S_TictactoePlay{}, handlePlay)
 	handler(&protocol.C2S_MoraPlay{}, handlePlay)
 }
 
 func handler(m interface{}, h interface{}) {
-	module.GetSkeleton().RegisterChanRPC(reflect.TypeOf(m), h)
+	_skeleton.RegisterChanRPC(reflect.TypeOf(m), h)
 }
 
 func handlePlay(args []interface{}) {
-	module.GetSkeleton().Go(func() {
+	_skeleton.Go(func() {
 
 		//获取基本信息
 		message := args[0]
@@ -66,7 +64,7 @@ func handleMatchPlayer(args []interface{}) {
 		return
 	}
 
-	if _, ok = play.New(gameId); !ok {
+	if _, ok = service.NewPlay(gameId); !ok {
 		errCode.Msg(agent, "游戏不存在！")
 		return
 	}
@@ -81,7 +79,7 @@ func handleMatchPlayer(args []interface{}) {
 	user.Uid3User(user)
 
 	//将当前角色uid加入对应的游戏匹配列表
-	match := new(model.Match)
+	match := &model.Match{}
 	match = match.GameId3UidMap(gameId, user.Uid)
 
 	//返回消息告诉前端已经加入匹配等待中
@@ -100,7 +98,7 @@ func handleMatchPlayer(args []interface{}) {
 				for uid := range userList {
 					match.GameId4UidMap(match.GameId, uid)
 				}
-				module.ChanRPC.Go("StartGame", roomId, match.GameId, userList)
+				ChanRPC.Go("StartGame", roomId, match.GameId, userList)
 				return false
 			}
 			return true
@@ -130,5 +128,7 @@ func handleCancelMatch(args []interface{}) {
 	user.Game.Id = 0
 	user.Game.Status = define.GameFree
 	user.Uid3User(user)
-	new(model.Match).GameId4UidMap(user.Game.Id, user.Uid)
+
+	match := model.Match{}
+	match.GameId4UidMap(user.Game.Id, user.Uid)
 }

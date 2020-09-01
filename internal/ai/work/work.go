@@ -1,19 +1,19 @@
 package work
 
 import (
-	"github.com/name5566/leaf/log"
-	"server/internal/ai/module/robot"
+	"server/internal/ai/robot"
 	"server/internal/common/define"
 	"server/internal/common/gamedata"
 	"server/internal/game"
-	"server/internal/game/service/play"
+	"server/internal/game/service"
 	"server/internal/model"
 	"server/internal/protocol"
-	"sync"
 
+	"github.com/name5566/leaf/log"
 	"github.com/name5566/leaf/module"
 
 	"reflect"
+	"sync"
 )
 
 var _lock sync.Mutex
@@ -23,8 +23,8 @@ type Work struct {
 }
 
 func init() {
-	workMod := new(Work)
-	for _, gameId := range play.AllGameId() {
+	workMod := Work{}
+	for _, gameId := range service.AllGameId() {
 		allGameHandler(workMod, gameId)
 	}
 }
@@ -35,27 +35,27 @@ func commonHandler(w *Work) {
 }
 
 //所有游戏都注册的
-func allGameHandler(work *Work, gameId int) {
-	work.RegisterCallMsg(gameId, &protocol.S2C_MatchPlayer{}, work.MatchPlayerSuccess)
+func allGameHandler(work Work, gameId int) {
+	robot.RegisterCallMsg(gameId, &protocol.S2C_MatchPlayer{}, work.MatchPlayerSuccess)
 }
 
-func (w Work) Start(skeleton *module.Skeleton) {
+func Start(skeleton *module.Skeleton) {
 	skeleton.Go(func() {
-		work := &Work{}
-		work.Robot = work.Create()
+		w := &Work{}
+		w.Robot = robot.New()
 		for {
 			select {
-			case <-work.MatchTicker.C:
-				work.MatchPlayer()
-			case message := <-work.CallCh:
-				work.Call(message)
-			case <-work.WorkEndCh:
+			case <-w.MatchTicker.C:
+				w.MatchPlayer()
+			case message := <-w.CallCh:
+				w.Call(message)
+			case <-w.WorkEndCh:
 				log.Debug("机器人工作结束, 重新开启新的机器人")
-				work.Restart(skeleton)
+				w.Restart(skeleton)
 				return
-			case <-work.CloseCh:
+			case <-w.CloseCh:
 				//log.Debug("机器人关闭,所有工作停止")
-				work.Close()
+				w.Close()
 				return
 			}
 		}
@@ -64,7 +64,7 @@ func (w Work) Start(skeleton *module.Skeleton) {
 
 func (w Work) Restart(skeleton *module.Skeleton) {
 	w.Close()
-	w.Start(skeleton)
+	Start(skeleton)
 }
 
 func (w Work) MatchPlayerSuccess(message interface{}, r *robot.Robot) {
@@ -73,7 +73,7 @@ func (w Work) MatchPlayerSuccess(message interface{}, r *robot.Robot) {
 
 func (w Work) MatchPlayer() {
 
-	if w.Game.Status != define.GameFree {
+	if w.User.Game.Status != define.GameFree {
 		log.Debug("ROBOT已经匹配中或者游戏中")
 		w.MatchTicker.Stop()
 		return
@@ -82,16 +82,19 @@ func (w Work) MatchPlayer() {
 	defer _lock.Unlock()
 	_lock.Lock()
 	//判断每个游戏的匹配人数然后加入
-	allGameId := play.AllGameId()
-	match := new(model.Match)
+	allGameId := service.AllGameId()
+	match := model.Match{}
 	for _, gameId := range allGameId {
 		matchPlayerNum := gamedata.GetMatchNum(gameId)
-		match2, _ := match.GameId2UidMap(gameId)
-		//如果匹配缺少人加入
-		if (matchPlayerNum - (int(match2.Num) % matchPlayerNum)) == 1 {
-			send := &protocol.C2S_MatchPlayer{GameId: gameId}
-			game.ChanRPC.Go(reflect.TypeOf(send), send, *w.Agent)
-			break
+
+		if match2, ok := match.GameId2UidMap(gameId);ok{
+
+			//如果匹配缺少人加入
+			if (matchPlayerNum - (int(match2.Num) % matchPlayerNum)) == 1 {
+				send := &protocol.C2S_MatchPlayer{GameId: gameId}
+				game.ChanRPC.Go(reflect.TypeOf(send), send, *w.User.Agent)
+				return
+			}
 		}
 	}
 

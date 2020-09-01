@@ -14,7 +14,7 @@ import (
 )
 
 func handler(m interface{}, h interface{}) {
-	skeleton.RegisterChanRPC(reflect.TypeOf(m), h)
+	_skeleton.RegisterChanRPC(reflect.TypeOf(m), h)
 }
 
 func init() {
@@ -49,14 +49,13 @@ func handleRegister(args []interface{}) {
 		return
 	}
 
-	user := new(model.User)
+	user := &model.User{}
 	if _, ok := user.FindLoginName(message.Name); ok {
 		errCode.Msg(agent, "该玩家名已经存在！")
 		return
 	}
 
-	user, err := user.Create(message.Name, message.Password)
-	if err != nil {
+	if user.Create(message.Name, message.Password) != nil {
 		errCode.Msg(agent, "注册失败！")
 		return
 	}
@@ -78,17 +77,16 @@ func handleLogin(args []interface{}) {
 	message := args[0].(*protocol.C2S_Login)
 	agent := args[1].(gate.Agent)
 
-	user := new(model.User)
+	user := &model.User{}
 	user, ok := user.FindLoginName(message.Name)
+	if !ok {
+		errCode.Msg(agent, "该玩家名不存在！")
+		return
+	}
 
 	//防止重复登录和在不同设备登录
 	if user.CheckRepeatLogin(user.Uid) {
 		errCode.Msg(agent, "你已经登录了！")
-		return
-	}
-
-	if !ok {
-		errCode.Msg(agent, "该玩家名不存在！")
 		return
 	}
 
@@ -118,7 +116,7 @@ func handleResetLogin(args []interface{}) {
 	message := args[0].(*protocol.C2S_ResetLogin)
 	agent := args[1].(gate.Agent)
 
-	user := new(model.User)
+	user := &model.User{}
 	user, ok := user.TempToken2User(message.Token)
 
 	//如果断开

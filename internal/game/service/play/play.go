@@ -1,9 +1,6 @@
 package play
 
 import (
-	"server/internal/common/define"
-	"server/internal/game/service/play/mora"
-	"server/internal/game/service/play/tictactoe"
 	"server/internal/model"
 )
 
@@ -14,18 +11,18 @@ type Play interface {
 	Run(*model.Call)
 }
 
-func New(gameId int) (Play, bool) {
-	serviceList := map[int]Play{
-		define.More:      new(mora.Mode),
-		define.Tictactoe: new(tictactoe.Mode),
-	}
-	service, ok := serviceList[gameId]
-	return service, ok
-}
+//func New(gameId int) (Play, bool) {
+//	serviceList := map[int]Play{
+//		define.More:      new(mora.Mode),
+//		define.Tictactoe: new(tictactoe.Mode),
+//	}
+//	service, ok := serviceList[gameId]
+//	return service, ok
+//}
 
-func AllGameId() []int {
-	return []int{
-		define.More,
-		define.Tictactoe,
-	}
-}
+//func AllGameId() []int {
+//	return []int{
+//		define.More,
+//		define.Tictactoe,
+//	}
+//}

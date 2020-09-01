@@ -7,8 +7,8 @@ import (
 	"github.com/name5566/leaf/log"
 )
 
-const CkCommon2MaxUid = "key:common|data:max_uid"
-const InitialUid = 10000000
+const _ckCommon2MaxUid = "key:common|data:max_uid"
+const _initialUid = 10000000
 
 type MaxUid struct {
 	ID  int `gorm:"primary_key"`
@@ -20,18 +20,18 @@ func init() {
 	if err != nil {
 		log.Fatal("初始化MaxUserId严重错误，程序退出 %v", err)
 	}
-	cache.New().SetNoExpiration(CkCommon2MaxUid, maxId)
+	cache.New().SetNoExpiration(_ckCommon2MaxUid, maxId)
 	//log.Release("======MaxUid写入缓存成功======")
 
 }
 
 //获取最新的角色id
-func (m *MaxUid) GetNewUid() int {
+func (m MaxUid) GetNewUid() int {
 
-	newId := InitialUid
+	newId := _initialUid
 	c := cache.New()
 
-	if maxId, ok := c.Get(CkCommon2MaxUid); ok {
+	if maxId, ok := c.Get(_ckCommon2MaxUid); ok {
 		//如果缓存存在最大id,直接取缓存的
 		newId = maxId.(int)
 	} else {
@@ -39,15 +39,15 @@ func (m *MaxUid) GetNewUid() int {
 		newId, _ = m.getDbMax()
 	}
 
-	c.SetNoExpiration(CkCommon2MaxUid, newId+1)
+	c.SetNoExpiration(_ckCommon2MaxUid, newId+1)
 
 	return newId
 }
 
 //获取max_uid的最大值
-func (m *MaxUid) getDbMax() (int, error) {
+func (m MaxUid) getDbMax() (int, error) {
 
-	var model = MaxUid{Max: InitialUid}
+	var model = MaxUid{Max: _initialUid}
 	var err error
 
 	//数据库也找不到，插入新的数据
@@ -64,8 +64,8 @@ func (m *MaxUid) getDbMax() (int, error) {
 	return model.Max, err
 }
 
-func (m *MaxUid) FlushDb() {
-	if maxUid, found := cache.New().Get(CkCommon2MaxUid); found {
+func (m MaxUid) FlushDb() {
+	if maxUid, found := cache.New().Get(_ckCommon2MaxUid); found {
 
 		m.Max = maxUid.(int)
 		err := db.New().Model(m).Update("max", maxUid).Error

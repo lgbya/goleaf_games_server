@@ -7,18 +7,15 @@ import (
 )
 
 var (
-	skeleton = base.NewSkeleton()
-	ChanRPC  = skeleton.ChanRPCServer
+	_skeleton = base.NewSkeleton()
+	ChanRPC   = _skeleton.ChanRPCServer
 )
 
 type Module struct {
 	*module.Skeleton
 }
 
-func GetSkeleton() *module.Skeleton {
-	return skeleton
-}
-
+var _ module.Module = (*Module)(nil)
 func (m *Module) Run(closeSig chan bool) {
 	s := m.Skeleton
 	newCloseSig := make(chan bool)
@@ -35,9 +32,13 @@ func (m *Module) Run(closeSig chan bool) {
 }
 
 func (m *Module) OnInit() {
-	m.Skeleton = skeleton
+	m.Skeleton = _skeleton
 }
 
 func (m *Module) OnDestroy() {
 
+}
+
+func GetSkeleton() *module.Skeleton {
+	return _skeleton
 }

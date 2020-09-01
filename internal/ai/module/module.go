@@ -1,10 +1,10 @@
 package internal
 
 import (
-	"server/internal/ai/module/robot"
-	"server/internal/ai/module/work"
-	_ "server/internal/ai/module/work/more"
-	_ "server/internal/ai/module/work/tictactoe"
+	"server/internal/ai/robot"
+	"server/internal/ai/work"
+	_ "server/internal/ai/work/more"
+	_ "server/internal/ai/work/tictactoe"
 	"server/internal/base"
 	"server/internal/common/conf"
 
@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	skeleton = base.NewSkeleton()
-	ChanRPC  = skeleton.ChanRPCServer
+	_skeleton = base.NewSkeleton()
+	ChanRPC   = _skeleton.ChanRPCServer
 )
 
 type Module struct {
@@ -21,10 +21,9 @@ type Module struct {
 }
 
 func (m *Module) OnInit() {
-	m.Skeleton = skeleton
-	workMod := work.Work{}
+	m.Skeleton = _skeleton
 	for i := 0; i < conf.Server.Robot.Num; i++ {
-		workMod.Start(skeleton)
+		work.Start(_skeleton)
 	}
 
 }

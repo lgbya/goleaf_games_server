@@ -1,8 +1,8 @@
 package tictactoe
 
 import (
-	"server/internal/ai/module/robot"
-	"server/internal/ai/module/work"
+	"server/internal/ai/robot"
+	"server/internal/ai/work"
 	"server/internal/common/define"
 	"server/internal/game"
 	"server/internal/protocol"
@@ -17,14 +17,14 @@ import (
 )
 
 type Job struct {
-	work.Work
+	*work.Work
 }
 
 func init() {
 	job := new(Job)
-	job.RegisterCallMsg(define.Tictactoe, &protocol.S2C_StartGame{}, job.StartGame)
-	job.RegisterCallMsg(define.Tictactoe, &protocol.S2C_TictactoePlay{}, job.Play)
-	job.RegisterCallMsg(define.Tictactoe, &protocol.S2C_EndGame{}, job.EndGame)
+	robot.RegisterCallMsg(define.Tictactoe, &protocol.S2C_StartGame{}, job.StartGame)
+	robot.RegisterCallMsg(define.Tictactoe, &protocol.S2C_TictactoePlay{}, job.Play)
+	robot.RegisterCallMsg(define.Tictactoe, &protocol.S2C_EndGame{}, job.EndGame)
 }
 
 func (j *Job) StartGame(message interface{}, r *robot.Robot) {
@@ -33,7 +33,7 @@ func (j *Job) StartGame(message interface{}, r *robot.Robot) {
 
 	start := msg.Start
 	currentUid := start["currentUid"]
-	surplusList = j.send(r.Uid, currentUid.(int), surplusList, *r.Agent)
+	surplusList = j.send(r.User.Uid, currentUid.(int), surplusList, *r.User.Agent)
 	gameInfo := r.GameInfo
 	gameInfo = make(map[string]interface{})
 	gameInfo["surplus"] = surplusList
@@ -49,7 +49,7 @@ func (j Job) Play(message interface{}, r *robot.Robot) {
 		return value.(decimal.Decimal).IntPart() == int64(msg.Number)
 	}).ToIntArray()
 	//判断是否到机器人操作
-	surplusList = j.send(r.Uid, msg.CurrentUid, surplusList, *r.Agent)
+	surplusList = j.send(r.User.Uid, msg.CurrentUid, surplusList, *r.User.Agent)
 	gameInfo["surplus"] = surplusList
 	r.GameInfo = gameInfo
 }
