@@ -5,7 +5,7 @@ import (
 	"github.com/name5566/leaf/module"
 	"server/internal/common/conf"
 	"server/internal/game"
-	"server/internal/protocol"
+	"server/internal/gate/protocol"
 	"time"
 )
 
@@ -15,18 +15,23 @@ type Module struct {
 
 var _ module.Module = (*Module)(nil)
 func (m *Module) OnInit() {
+	config := conf.Get()
+
 	m.Gate = &gate.Gate{
-		MaxConnNum:      conf.Server.MaxConnNum,
-		PendingWriteNum: conf.Server.Gate.PendingWriteNum,
-		MaxMsgLen:       conf.Server.Gate.MaxMsgLen,
-		WSAddr:          conf.Server.WSAddr,
-		HTTPTimeout:     conf.Server.Gate.HTTPTimeout * time.Second,
-		CertFile:        conf.Server.CertFile,
-		KeyFile:         conf.Server.KeyFile,
-		TCPAddr:         conf.Server.TCPAddr,
-		LenMsgLen:       conf.Server.Gate.LenMsgLen,
-		LittleEndian:    conf.Server.Gate.LittleEndian,
+		MaxConnNum:      config.Server.MaxConnNum,
+		WSAddr:          config.Server.WSAddr,
+		CertFile:        config.Server.CertFile,
+		KeyFile:         config.Server.KeyFile,
+		TCPAddr:         config.Server.TCPAddr,
+
+		HTTPTimeout:     config.Gate.HTTPTimeout * time.Second,
+		PendingWriteNum: config.Gate.PendingWriteNum,
+		MaxMsgLen:       config.Gate.MaxMsgLen,
+		LenMsgLen:       config.Gate.LenMsgLen,
+		LittleEndian:    config.Gate.LittleEndian,
+
 		Processor:       protocol.Processor,
+
 		AgentChanRPC:    game.ChanRPC,
 	}
 }

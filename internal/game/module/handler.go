@@ -6,8 +6,8 @@ import (
 	"server/internal/common/gamedata"
 	"server/internal/common/helper/game-helper"
 	"server/internal/game/service"
+	"server/internal/gate/protocol"
 	"server/internal/model"
-	"server/internal/protocol"
 
 	"github.com/name5566/leaf/gate"
 

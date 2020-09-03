@@ -2,8 +2,8 @@ package gate
 
 import (
 	"server/internal/game"
+	"server/internal/gate/protocol"
 	"server/internal/login"
-	"server/internal/protocol"
 )
 
 func init() {

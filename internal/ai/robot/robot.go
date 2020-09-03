@@ -44,7 +44,7 @@ func New() *Robot {
 		Name:    robot.RandomName(),
 		IsRobot: true,
 	}
-	robot.MatchTicker = time.NewTicker(conf.Server.Robot.MatchTime * time.Second)
+	robot.MatchTicker = time.NewTicker(conf.Get().Robot.MatchTime * time.Second)
 	robot.CallCh = callCh
 	robot.CloseCh = closeCh
 	robot.WorkEndCh = workEndCh

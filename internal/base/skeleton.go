@@ -7,11 +7,12 @@ import (
 )
 
 func NewSkeleton() *module.Skeleton {
+	config := conf.Get()
 	skeleton := &module.Skeleton{
-		GoLen:              conf.Server.Skeleton.GoLen,
-		TimerDispatcherLen: conf.Server.Skeleton.TimerDispatcherLen,
-		AsynCallLen:        conf.Server.Skeleton.AsynCallLen,
-		ChanRPCServer:      chanrpc.NewServer(conf.Server.Skeleton.ChanRPCLen),
+		GoLen:              config.Skeleton.GoLen,
+		TimerDispatcherLen: config.Skeleton.TimerDispatcherLen,
+		AsynCallLen:        config.Skeleton.AsynCallLen,
+		ChanRPCServer:      chanrpc.NewServer(config.Skeleton.ChanRPCLen),
 	}
 	skeleton.Init()
 	return skeleton

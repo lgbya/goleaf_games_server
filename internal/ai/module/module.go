@@ -22,7 +22,8 @@ type Module struct {
 
 func (m *Module) OnInit() {
 	m.Skeleton = _skeleton
-	for i := 0; i < conf.Server.Robot.Num; i++ {
+	config := conf.Get()
+	for i := 0; i < config.Robot.Num; i++ {
 		work.Start(_skeleton)
 	}
 

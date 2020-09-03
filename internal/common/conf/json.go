@@ -7,9 +7,19 @@ import (
 	"time"
 )
 
-var LogFlag = log.Ldate | log.Ltime
+var _conf Conf
 
-var Server struct {
+type Conf struct {
+	Server		Server
+	DB          DB
+	Log         Log
+	Gate        Gate
+	Robot       Robot
+	Cache       Cache
+	Skeleton    Skeleton
+}
+
+type Server struct {
 	WSAddr      string
 	CertFile    string
 	KeyFile     string
@@ -18,12 +28,6 @@ var Server struct {
 	ConsolePort int
 	ProfilePath string
 	Md5Key      string
-	DB          DB
-	Log         Log
-	Gate        Gate
-	Robot       Robot
-	Cache       Cache
-	Skeleton    Skeleton
 }
 
 type Skeleton struct {
@@ -36,6 +40,7 @@ type Skeleton struct {
 type Log struct {
 	Level string
 	Path  string
+	Flag  int
 }
 
 type Gate struct {
@@ -66,15 +71,20 @@ type Cache struct {
 }
 
 func init() {
-
 	data, err := ioutil.ReadFile("configs/server.json")
 
 	if err != nil {
 		log.Fatal("%v", err)
 	}
 
-	err = json.Unmarshal(data, &Server)
+	err = json.Unmarshal(data, &_conf)
 	if err != nil {
 		log.Fatal("%v", err)
 	}
+	_conf.Log.Flag = log.Ldate | log.Ltime
+
+}
+
+func Get() Conf {
+	return _conf
 }

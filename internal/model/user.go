@@ -162,7 +162,7 @@ func (u User) CheckRepeatLogin(uid int) bool {
 }
 
 func (u *User) GenerateToken() (string, int64) {
-	u.Token = helper.Md5(string(helper.RandNum(999999)) + string(u.ID) + conf.Server.Md5Key)
+	u.Token = helper.Md5(string(helper.RandNum(999999)) + string(u.ID) + conf.Get().Server.Md5Key)
 	u.ExpiresAt = time.Now().AddDate(0, 0, 3).Unix()
 	return u.Token, u.ExpiresAt
 }
@@ -172,7 +172,7 @@ func (u User) AuthLoginPassword(loginPassword string) bool {
 }
 
 func (u User) getSignPassword(password string) string {
-	return helper.Md5(password + conf.Server.Md5Key)
+	return helper.Md5(password + conf.Get().Server.Md5Key)
 }
 
 //写入登录数据

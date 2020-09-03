@@ -1,9 +1,10 @@
 package gamehelper
 
 import (
-	"github.com/name5566/leaf/gate"
+	"server/internal/gate/protocol"
 	"server/internal/model"
-	"server/internal/protocol"
+
+	"github.com/name5566/leaf/gate"
 )
 
 func CheckLogin(agent gate.Agent) (*model.User, bool) {

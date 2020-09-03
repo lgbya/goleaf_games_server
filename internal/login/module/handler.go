@@ -3,8 +3,8 @@ package module
 import (
 	"server/internal/common/err-code"
 	"server/internal/game"
+	"server/internal/gate/protocol"
 	"server/internal/model"
-	"server/internal/protocol"
 
 	"github.com/name5566/leaf/gate"
 

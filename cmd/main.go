@@ -13,11 +13,12 @@ import (
 func main() {
 
 	//初始化基础配置
-	lconf.LogLevel = conf.Server.Log.Level
-	lconf.LogPath = conf.Server.Log.Path
-	lconf.LogFlag = conf.LogFlag
-	lconf.ConsolePort = conf.Server.ConsolePort
-	lconf.ProfilePath = conf.Server.ProfilePath
+	config := conf.Get()
+	lconf.LogLevel = config.Log.Level
+	lconf.LogPath = config.Log.Path
+	lconf.LogFlag = config.Log.Flag
+	lconf.ConsolePort = config.Server.ConsolePort
+	lconf.ProfilePath = config.Server.ProfilePath
 
 	leaf.Run(
 		game.Module,

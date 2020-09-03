@@ -1,8 +1,9 @@
 package errCode
 
 import (
+	"server/internal/gate/protocol"
+
 	"github.com/name5566/leaf/gate"
-	"server/internal/protocol"
 )
 
 func Msg(agent gate.Agent, message string) {

@@ -8,12 +8,12 @@ import (
 )
 
 func NewPlay(gameId int) (play.Play, bool) {
-	playList := map[int]play.Play{
+	playServiceList := map[int]play.Play{
 		define.More:      new(mora.Mode),
 		define.Tictactoe: new(tictactoe.Mode),
 	}
-	service, ok := playList[gameId]
-	return service, ok
+	playService, ok := playServiceList[gameId]
+	return playService, ok
 }
 
 func AllGameId() []int {

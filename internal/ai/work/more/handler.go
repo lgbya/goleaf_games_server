@@ -5,7 +5,7 @@ import (
 	"server/internal/ai/work"
 	"server/internal/common/define"
 	"server/internal/game"
-	"server/internal/protocol"
+	"server/internal/gate/protocol"
 
 	"math/rand"
 	"reflect"

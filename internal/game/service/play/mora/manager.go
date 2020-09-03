@@ -4,8 +4,8 @@ import (
 	"server/internal/common/err-code"
 	"server/internal/common/helper/game-helper"
 	"server/internal/game/service/play"
+	"server/internal/gate/protocol"
 	"server/internal/model"
-	"server/internal/protocol"
 
 	"math"
 )
