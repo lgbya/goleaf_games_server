@@ -11,7 +11,7 @@ import (
 )
 
 var _roomId int64 = 100000
-var roomIdMap sync.Map
+var _roomIdMap sync.Map
 
 type Room struct {
 	ID       int
@@ -45,17 +45,17 @@ func (r Room) RoomId2Room(roomId int) (*Room, bool) {
 }
 
 func (r Room) RoomId3Room(data *Room) {
-	roomIdMap.LoadOrStore(data.ID, data.StopCh)
+	_roomIdMap.LoadOrStore(data.ID, data.StopCh)
 	cache.New().SetNoExpiration(r.ckRoomId2Room(data.ID), data)
 }
 
 func (r Room) RoomId4Room(roomId int) {
-	roomIdMap.Delete(roomId)
+	_roomIdMap.Delete(roomId)
 	cache.New().Delete(r.ckRoomId2Room(roomId))
 }
 
 func (r Room) StopAllRoom() {
-	roomIdMap.Range(func(key, value interface{}) bool {
+	_roomIdMap.Range(func(key, value interface{}) bool {
 		if ch, ok := value.(chan bool); ok {
 			ch <- true
 		}
