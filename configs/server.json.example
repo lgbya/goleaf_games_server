@@ -1,7 +1,9 @@
 {
-	"WSAddr": "192.168.2.201:3563",
-	"MaxConnNum": 20000,
-	"Md5Key" : "gjwagawrfhwealu3131",
+	"Server": {
+		"WSAddr": "192.168.2.201:3563",
+		"MaxConnNum": 20000,
+		"Md5Key" : "gjwagawrfhwealu3131"
+	},
 	"Log":{
 		"Level" : "debug",
 		"Path"  : ""
@@ -28,7 +30,7 @@
 		"MaxOpen": 10
 	},
 	"Robot" : {
-		"Num" 		: 10,
+		"Num" 		: 1,
 		"MatchTime" : 3
 	},
 	"Cache": {
