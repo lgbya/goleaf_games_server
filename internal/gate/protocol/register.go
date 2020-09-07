@@ -1,0 +1,25 @@
+package protocol
+
+func init() {
+	Processor.Register(&S2C_MatchPlayer{})
+	Processor.Register(&S2C_MoraPlay{})
+	Processor.Register(&C2S_TictactoePlay{})
+	Processor.Register(&C2S_Heart{})
+	Processor.Register(&C2S_Register{})
+	Processor.Register(&M_UserInfo{})
+	Processor.Register(&S2C_ResetLogin{})
+	Processor.Register(&C2S_MoraPlay{})
+	Processor.Register(&C2S_ResetLogin{})
+	Processor.Register(&S2C_ContinueGame{})
+	Processor.Register(&S2C_EndGame{})
+	Processor.Register(&S2C_Register{})
+	Processor.Register(&S2C_Login{})
+	Processor.Register(&C2S_Login{})
+	Processor.Register(&C2S_MatchPlayer{})
+	Processor.Register(&C2S_CancelMatch{})
+	Processor.Register(&S2C_CancelMatch{})
+	Processor.Register(&S2C_StartGame{})
+	Processor.Register(&S2C_TictactoePlay{})
+	Processor.Register(&S2C_Heart{})
+	Processor.Register(&S2C_Error{})
+}

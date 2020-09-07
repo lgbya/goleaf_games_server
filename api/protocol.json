@@ -1,0 +1,292 @@
+{
+  "C2S_Heart": {
+    "router": "login"
+  },
+
+  "S2C_Heart": {
+    "field": {
+      "Time": {
+        "type":"int64",
+        "tag": "time"
+      }
+    }
+  },
+
+  "S2C_Error": {
+    "field":{
+      "Code":{
+        "type": "string",
+        "tag": "code"
+      },
+      "Message":{
+        "type": "string",
+        "tag": "message"
+      }
+    }
+  },
+
+  "C2S_Register" :{
+    "router": "login",
+    "field": {
+      "Name": {
+        "type": "string",
+        "tag": "name"
+      },
+      "Password": {
+        "type": "string",
+        "tag": "Password"
+      },
+      "ConfirmPassword":{
+        "type": "string",
+        "tag": "confirmPassword"
+      }
+
+    }
+  },
+
+  "S2C_Register" :{
+    "field": {
+      "Uid": {
+        "type": "int",
+        "tag": "uid"
+      },
+      "Name": {
+        "type": "string",
+        "tag": "name"
+      },
+      "Gold":{
+        "type": "int",
+        "tag": "name"
+      },
+      "Token":{
+        "type": "string",
+        "tag": "token"
+      },
+      "ExpiresTime":{
+        "type": "int64",
+        "tag": "expiresTime"
+      }
+    }
+  },
+
+  "C2S_Login" :{
+    "router": "login",
+    "field": {
+      "Name": {
+        "type": "string",
+        "tag": "name"
+      },
+      "Password":{
+        "type": "string",
+        "tag": "password"
+      }
+    }
+  },
+
+  "S2C_Login" :{
+    "field": {
+      "Uid": {
+        "type": "int",
+        "tag": "uid"
+      },
+      "Name":{
+        "type": "string",
+        "tag": "name"
+      },
+      "Gold":{
+        "type": "int",
+        "tag": "gold"
+      },
+      "Token":{
+        "type": "string",
+        "tag": "token"
+      },
+      "ExpiresTime":{
+        "type": "int64",
+        "tag": "expiresTime"
+      }
+    }
+  },
+
+  "C2S_ResetLogin" :{
+    "router": "login",
+    "field": {
+      "Token":{
+        "type": "string",
+        "tag": "token"
+      }
+    }
+  },
+
+  "S2C_ResetLogin" :{
+    "field": {
+      "Uid":{
+        "type": "int",
+        "tag": "uid"
+      },
+      "Name":{
+        "type": "string",
+        "tag": "name"
+      },
+      "Gold":{
+        "type": "int",
+        "tag": "gold"
+      },
+      "Token":{
+        "type": "string",
+        "tag": "token"
+      },
+      "ExpiresTime":{
+        "type": "int64",
+        "tag": "expiresTime"
+      }
+    }
+  },
+
+  "C2S_MatchPlayer" :{
+    "router": "game",
+    "field": {
+      "GameId":{
+        "type": "int",
+        "tag": "gameId"
+      }
+    }
+  },
+
+  "S2C_MatchPlayer" :{
+    "field": {
+      "GameId":{
+        "type": "int",
+        "tag": "gameId"
+      }
+    }
+  },
+
+  "C2S_CancelMatch" :{
+    "router": "game",
+    "field": {}
+  },
+
+  "S2C_CancelMatch" :{
+    "field": {}
+  },
+
+  "S2C_StartGame" :{
+    "field": {
+      "RoomId":{
+        "type": "int",
+        "tag": "roomId"
+      },
+      "GameId":{
+        "type": "int",
+        "tag": "gameId"
+      },
+      "UserList":{
+        "type": "map[int]M_UserInfo",
+        "tag": "userList"
+      },
+      "Start":{
+        "type": "map[string]interface{}",
+        "tag": "start"
+      }
+    }
+  },
+
+  "S2C_ContinueGame" :{
+    "field": {
+      "RoomId":{
+        "type": "int",
+        "tag": "roomId"
+      },
+      "GameId":{
+        "type": "int",
+        "tag": "gameId"
+      },
+      "UserList":{
+        "type": "map[int]M_UserInfo",
+        "tag": "userList"
+      },
+      "Continue":{
+        "type": "map[string]interface{}",
+        "tag": "continue"
+      }
+    }
+  },
+
+  "S2C_EndGame" :{
+    "field": {
+      "WinUid":{
+        "type": "int",
+        "tag": "winUid"
+      },
+      "End":{
+        "type": "map[string]interface{}",
+        "tag": "end"
+      }
+    }
+  },
+
+  "C2S_MoraPlay" :{
+    "router": "game",
+    "field": {
+      "Ply":{
+        "type": "int",
+        "tag": "ply"
+      }
+    }
+  },
+
+  "S2C_MoraPlay" :{
+    "field": {
+      "Uid":{
+        "type": "int",
+        "tag": "uid"
+      },
+      "Ply":{
+        "type": "int",
+        "tag": "ply"
+      }
+    }
+  },
+
+  "C2S_TictactoePlay" :{
+    "router": "game",
+    "field": {
+      "Number":{
+        "type": "int",
+        "tag": "number"
+      }
+    }
+  },
+
+  "S2C_TictactoePlay" :{
+    "field": {
+      "Uid":{
+        "type": "int",
+        "tag": "uid"
+      },
+      "Number":{
+        "type": "int",
+        "tag": "number"
+      },
+      "CurrentUid":{
+        "type": "int",
+        "tag": "currentUid"
+      }
+    }
+  },
+
+  "M_UserInfo" :{
+    "field": {
+      "Uid":{
+        "type": "int",
+        "tag": "uid"
+      },
+      "Name":{
+        "type": "string",
+        "tag": "name"
+      }
+    }
+  }
+
+}
