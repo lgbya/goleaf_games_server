@@ -2,7 +2,7 @@
 
 ## 一，说明
 #### 根据游戏服go leaf框架 + 客户端node + vue 写的多个小游戏集合， 现有猜拳，井字棋
-#### 线上地址 http://139.159.155.172:8080/#/
+#### 线上地址 http://game.yoss.top/#/
 #### 客户端git地址:https://github.com/lgbya/goleaf_games_client
 
 ## 二，配置环境
